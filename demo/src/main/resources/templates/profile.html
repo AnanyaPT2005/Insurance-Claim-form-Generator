@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Patient Profile</title>
+</head>
+
+<body>
+
+<h2>Patient Profile</h2>
+
+<form th:action="@{/profile}"
+      th:object="${patient}"
+      method="post">
+
+    <h3>Personal Information</h3>
+
+    Full Name
+    <input type="text" th:field="*{fullName}">
+    <br><br>
+
+    Date of Birth
+    <input type="date" th:field="*{dob}">
+    <br><br>
+
+    Gender
+    <input type="text" th:field="*{gender}">
+    <br><br>
+
+    Phone
+    <input type="text" th:field="*{phone}">
+    <br><br>
+
+    Email
+    <input type="email" th:field="*{email}">
+    <br><br>
+
+    Address
+    <textarea th:field="*{address}"></textarea>
+
+    <br><br>
+
+    PAN Number
+    <input type="text" th:field="*{panNumber}">
+
+    <hr>
+
+    <h3>Insurance Information</h3>
+
+    Insurance Company
+    <input type="text"
+           th:field="*{insuranceCompany}">
+
+    <br><br>
+
+    Policy Number
+    <input type="text"
+           th:field="*{policyNumber}">
+
+    <br><br>
+
+    Member ID
+    <input type="text"
+           th:field="*{memberId}">
+
+    <br><br>
+
+    <button type="submit">
+
+        Save Profile
+
+    </button>
+
+</form>
+
+</body>
+</html>

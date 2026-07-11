@@ -1,13 +1,10 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.RegisterRequest;
-import com.example.demo.entity.User;
 import com.example.demo.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class AuthController {
@@ -26,13 +23,13 @@ public class AuthController {
     @GetMapping("/register")
     public String register(Model model) {
 
-        model.addAttribute("user", new User());
+        model.addAttribute("registerRequest", new RegisterRequest());
 
         return "register";
     }
 
     @PostMapping("/register")
-    public String saveUser(@ModelAttribute RegisterRequest request) {
+    public String registerUser(@ModelAttribute RegisterRequest request) {
 
         userService.registerUser(request);
 

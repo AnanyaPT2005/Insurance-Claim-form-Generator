@@ -3,9 +3,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-
-<title>Register</title>
-
+    <title>Register</title>
 </head>
 
 <body>
@@ -13,35 +11,22 @@
 <h2>Create Account</h2>
 
 <form th:action="@{/register}"
-      th:object="${user}"
+      th:object="${registerRequest}"
       method="post">
 
-Username
+    Username:
+    <input type="text" th:field="*{username}">
+    <br><br>
 
-<input type="text"
-       th:field="*{username}">
+    Email:
+    <input type="email" th:field="*{email}">
+    <br><br>
 
-<br><br>
+    Password:
+    <input type="password" th:field="*{password}">
+    <br><br>
 
-Email
-
-<input type="email"
-       th:field="*{email}">
-
-<br><br>
-
-Password
-
-<input type="password"
-       th:field="*{passwordHash}">
-
-<br><br>
-
-<button type="submit">
-
-Register
-
-</button>
+    <button type="submit">Register</button>
 
 </form>
 
