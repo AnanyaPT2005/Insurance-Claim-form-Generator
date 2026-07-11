@@ -3,7 +3,7 @@ package com.example.demo.service;
 import com.example.demo.entity.Patient;
 import com.example.demo.repository.PatientRepository;
 import org.springframework.stereotype.Service;
-
+import com.example.demo.entity.User;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,5 +30,17 @@ public class PatientService {
 
     public void deletePatient(Long id) {
         patientRepository.deleteById(id);
+    }
+
+    public Optional<Patient> getPatientByUser(User user) {
+
+        return patientRepository.findByUser(user);
+
+    }
+
+    public Patient updatePatient(Patient patient) {
+
+        return patientRepository.save(patient);
+
     }
 }

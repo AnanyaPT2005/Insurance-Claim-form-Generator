@@ -18,10 +18,10 @@ public class Patient {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "full_name", nullable = false)
+    @Column(name = "full_name")
     private String fullName;
 
-    @Column(nullable = false)
+    @Column
     private LocalDate dob;
 
     private String gender;
@@ -53,8 +53,135 @@ public class Patient {
     @OneToMany(mappedBy = "patient")
     private List<Claim> claims;
 
+    public Patient() {
+    }
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
+    }
+
+    // ---------- Getters ----------
+
+    public Long getPatientId() {
+        return patientId;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public LocalDate getDob() {
+        return dob;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getPanNumber() {
+        return panNumber;
+    }
+
+    public String getInsuranceCompany() {
+        return insuranceCompany;
+    }
+
+    public String getPolicyNumber() {
+        return policyNumber;
+    }
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public List<MedicalBill> getMedicalBills() {
+        return medicalBills;
+    }
+
+    public List<Claim> getClaims() {
+        return claims;
+    }
+
+    // ---------- Setters ----------
+
+    public void setPatientId(Long patientId) {
+        this.patientId = patientId;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dob = dob;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setPanNumber(String panNumber) {
+        this.panNumber = panNumber;
+    }
+
+    public void setInsuranceCompany(String insuranceCompany) {
+        this.insuranceCompany = insuranceCompany;
+    }
+
+    public void setPolicyNumber(String policyNumber) {
+        this.policyNumber = policyNumber;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setMedicalBills(List<MedicalBill> medicalBills) {
+        this.medicalBills = medicalBills;
+    }
+
+    public void setClaims(List<Claim> claims) {
+        this.claims = claims;
     }
 }
