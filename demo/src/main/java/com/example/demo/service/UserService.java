@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
 
@@ -26,6 +27,19 @@ public class UserService {
 
         user.setPasswordHash(
                 encoder.encode(user.getPasswordHash()));
+
+        return userRepository.save(user);
+    }
+
+    public User registerUser(RegisterRequest request) {
+        User user = new User();
+
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPasswordHash(
+                encoder.encode(request.getPassword()));
+
+        user.setRole("USER");
 
         return userRepository.save(user);
     }

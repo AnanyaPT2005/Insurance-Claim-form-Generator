@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.User;
 import com.example.demo.service.UserService;
 import org.springframework.stereotype.Controller;
@@ -31,9 +32,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String saveUser(@ModelAttribute User user) {
+    public String saveUser(@ModelAttribute RegisterRequest request) {
 
-        userService.saveUser(user);
+        userService.registerUser(request);
 
         return "redirect:/login";
     }

@@ -27,6 +27,9 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @OneToOne(mappedBy = "user")
+    private Patient patient;
+
     public User() {
     }
 
@@ -35,11 +38,18 @@ public class User {
         createdAt = LocalDateTime.now();
     }
 
-    @OneToOne(mappedBy = "user")
-    private Patient patient;
+    // ---------- Getters ----------
+
+    public Long getUserId() {
+        return userId;
+    }
 
     public String getUsername() {
         return username;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public String getPasswordHash() {
@@ -50,7 +60,41 @@ public class User {
         return role;
     }
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public Patient getPatient() {
+        return patient;
+    }
+
+    // ---------- Setters ----------
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setPatient(Patient patient) {
+        this.patient = patient;
     }
 }
