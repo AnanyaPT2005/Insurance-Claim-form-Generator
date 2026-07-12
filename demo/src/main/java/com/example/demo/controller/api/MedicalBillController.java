@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/bills")
+@RequestMapping("api/bills")
 public class MedicalBillController {
 
     private final MedicalBillService medicalBillService;

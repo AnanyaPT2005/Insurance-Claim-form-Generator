@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/claims")
+@RequestMapping("api/claims")
 public class ClaimController {
 
     private final ClaimService claimService;

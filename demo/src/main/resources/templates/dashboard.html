@@ -5,9 +5,7 @@
     <title>Insurance Dashboard</title>
 </head>
 
-
 <body>
-
 
 <h1>Insurance Dashboard</h1>
 
@@ -19,34 +17,106 @@
 
 <h2>Current Claim</h2>
 
+<h3>Upload Medical Bill</h3>
 
+<form th:action="@{/bills/upload}"
+      method="post"
+      enctype="multipart/form-data">
+
+    <input type="file"
+           name="file"
+           accept=".jpg,.jpeg,.png,.pdf"
+           required>
+
+    <button type="submit">
+        Upload Medical Bill
+    </button>
+
+</form>
+
+<br>
 
 <h3>Current Claim Bills</h3>
 
-<p>No bills added yet.</p>
+<table border="1">
 
-<p>
-    <a href="/bills/upload">➕ Upload Medical Bill</a>
-</p>
+    <tr>
+        <th>Hospital / Pharmacy</th>
+        <th>Bill Number</th>
+        <th>Date</th>
+        <th>Subtotal</th>
+        <th>Total</th>
+        <th>Items</th>
+    </tr>
 
-<h3>Claim Form</h3>
+    <tr th:if="${uploadedBill != null}">
 
-<form>
+        <td th:text="${uploadedBill.hospitalName}"></td>
 
-    <label>Select Claim Form</label>
+        <td th:text="${uploadedBill.billNumber}"></td>
 
-    <select>
+        <td th:text="${uploadedBill.billDate}"></td>
 
-        <option>LIC Health Claim Form</option>
+        <td th:text="${uploadedBill.subtotal}"></td>
 
-    </select>
+        <td th:text="${uploadedBill.total}"></td>
 
-    <br><br>
+        <td>
+
+            <details>
+
+                <summary>View Items</summary>
+
+                <table border="1">
+
+                    <tr>
+                        <th>Select</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                    </tr>
+
+                    <tr th:each="item : ${uploadedBill.items}">
+
+                        <td>
+                            <input type="checkbox" checked>
+                        </td>
+
+                        <td>
+                            <input type="text"
+                                   th:value="${item.description}">
+                        </td>
+
+                        <td>
+                            <input type="number"
+                                   th:value="${item.quantity}">
+                        </td>
+
+                        <td>
+                            <input type="number"
+                                   step="0.01"
+                                   th:value="${item.price}">
+                        </td>
+
+                    </tr>
+
+                </table>
+
+            </details>
+
+        </td>
+
+    </tr>
+
+</table>
+
+<br>
+
+<form th:action="@{/bills/save}"
+      method="post">
 
     <button type="submit">
-
-        Generate Claim
-
+        Save Bill
     </button>
 
 </form>
@@ -65,15 +135,9 @@
 
 <p>No medical bills uploaded.</p>
 
-<p>
+<br>
 
-    <a href="/logout">
-
-        Logout
-
-    </a>
-
-</p>
+<a href="/logout">Logout</a>
 
 </body>
 

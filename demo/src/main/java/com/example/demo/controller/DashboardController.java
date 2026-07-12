@@ -1,6 +1,9 @@
 package com.example.demo.controller;
 
 import com.example.demo.service.MedicalBillService;
+
+import java.util.ArrayList;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +20,11 @@ public class DashboardController {
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
 
-        model.addAttribute("currentBills",
-                medicalBillService.getAllBills());
+        model.addAttribute("currentBills", new ArrayList<>());
+
+        model.addAttribute("claimHistory", new ArrayList<>());
+
+        model.addAttribute("billRepository", new ArrayList<>());
 
         return "dashboard";
     }

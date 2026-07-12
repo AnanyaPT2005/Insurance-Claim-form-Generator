@@ -4,6 +4,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.example.demo.dto.OCRBillResponse;
+import com.example.demo.service.OCRService;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -14,12 +18,18 @@ public class BillController {
 
     private static final String UPLOAD_DIR = "insurance-uploads";
 
+    private final OCRService ocrService;
+
+    public BillController(OCRService ocrService) {
+        this.ocrService = ocrService;
+    }
+
     @PostMapping("/upload")
     public String uploadBill(@RequestParam("file") MultipartFile file,
-            Model model) throws IOException {
+            RedirectAttributes redirectAttributes)
+            throws IOException {
 
         if (file.isEmpty()) {
-
             return "redirect:/dashboard";
         }
 
@@ -34,17 +44,31 @@ public class BillController {
                 path,
                 StandardCopyOption.REPLACE_EXISTING);
 
-        model.addAttribute("uploadedFile", path.toString());
+        OCRBillResponse response = ocrService.process(file);
 
         /*
          * Next step:
          *
-         * OCRService.process(path)
-         *
-         * model.addAttribute("ocr", response);
+         * Save response as Draft Bill
          */
 
-        return "review-bill";
+        redirectAttributes.addFlashAttribute(
+                "uploadedBill",
+                response);
+
+        return "redirect:/dashboard";
     }
 
+    @PostMapping("/save")
+    public String saveBill() {
+
+        /*
+         * Next step:
+         *
+         * Save MedicalBill
+         * Save BillItems
+         */
+
+        return "redirect:/dashboard";
+    }
 }

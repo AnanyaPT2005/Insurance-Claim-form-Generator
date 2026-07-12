@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/bill-items")
+@RequestMapping("api/bill-items")
 public class BillItemController {
 
     private final BillItemService billItemService;
