@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Review Bill</title>
+</head>
+
+<body>
+
+<h2>OCR Review</h2>
+
+<p>
+    Uploaded File:
+</p>
+
+<p th:text="${uploadedFile}"></p>
+
+<hr>
+
+<form>
+
+    Hospital Name
+
+    <input type="text">
+
+    <br><br>
+
+    Bill Number
+
+    <input type="text">
+
+    <br><br>
+
+    Bill Date
+
+    <input type="date">
+
+    <br><br>
+
+    Subtotal
+
+    <input type="number">
+
+    <br><br>
+
+    Total
+
+    <input type="number">
+
+    <br><br>
+
+    <button>
+
+        Save Bill
+
+    </button>
+
+</form>
+
+</body>
+</html>

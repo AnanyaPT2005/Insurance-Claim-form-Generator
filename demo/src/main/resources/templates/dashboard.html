@@ -1,27 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <title>Dashboard</title>
+    <title>Insurance Dashboard</title>
 </head>
+
 
 <body>
 
+
 <h1>Insurance Dashboard</h1>
 
-<a href="/profile">
+<p>
+    <a href="/profile">👤 View / Edit Profile</a>
+</p>
 
-Complete Profile
+<hr>
 
-</a>
+<h2>Current Claim</h2>
 
-<br><br>
 
-<a href="/logout">
 
-Logout
+<h3>Current Claim Bills</h3>
 
-</a>
+<p>No bills added yet.</p>
+
+<p>
+    <a href="/bills/upload">➕ Upload Medical Bill</a>
+</p>
+
+<h3>Claim Form</h3>
+
+<form>
+
+    <label>Select Claim Form</label>
+
+    <select>
+
+        <option>LIC Health Claim Form</option>
+
+    </select>
+
+    <br><br>
+
+    <button type="submit">
+
+        Generate Claim
+
+    </button>
+
+</form>
+
+<hr>
+
+<h2>History</h2>
+
+<h3>Generated Claim Forms</h3>
+
+<p>No claim forms generated.</p>
+
+<hr>
+
+<h3>Medical Bill Repository</h3>
+
+<p>No medical bills uploaded.</p>
+
+<p>
+
+    <a href="/logout">
+
+        Logout
+
+    </a>
+
+</p>
 
 </body>
 
