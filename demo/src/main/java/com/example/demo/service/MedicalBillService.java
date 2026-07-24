@@ -1,6 +1,8 @@
 package com.example.demo.service;
 
+import com.example.demo.entity.BillStatus;
 import com.example.demo.entity.MedicalBill;
+import com.example.demo.entity.Patient;
 import com.example.demo.repository.MedicalBillRepository;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,14 @@ public class MedicalBillService {
 
     public MedicalBillService(MedicalBillRepository medicalBillRepository) {
         this.medicalBillRepository = medicalBillRepository;
+    }
+
+    public List<MedicalBill> getDraftBills(Patient patient) {
+
+        return medicalBillRepository.findByPatientAndStatus(
+                patient,
+                BillStatus.DRAFT);
+
     }
 
     public MedicalBill saveBill(MedicalBill bill) {

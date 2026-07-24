@@ -49,17 +49,15 @@
         <th>Items</th>
     </tr>
 
-    <tr th:if="${uploadedBill != null}">
+    <tr th:each="bill : ${currentBills}">
 
-        <td th:text="${uploadedBill.hospitalName}"></td>
+        <td th:text="${bill.hospitalName}"></td>
 
-        <td th:text="${uploadedBill.billNumber}"></td>
+<td th:text="${bill.billNumber}"></td>
 
-        <td th:text="${uploadedBill.billDate}"></td>
+<td th:text="${bill.billDate}"></td>
 
-        <td th:text="${uploadedBill.subtotal}"></td>
-
-        <td th:text="${uploadedBill.total}"></td>
+<td th:text="${bill.totalAmount}"></td>
 
         <td>
 

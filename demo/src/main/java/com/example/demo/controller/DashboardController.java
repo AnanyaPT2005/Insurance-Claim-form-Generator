@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.entity.Patient;
 import com.example.demo.service.MedicalBillService;
+import com.example.demo.service.PatientService;
 
 import java.util.ArrayList;
 
@@ -11,21 +13,37 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class DashboardController {
 
-    private final MedicalBillService medicalBillService;
+        private final MedicalBillService medicalBillService;
+        private final PatientService patientService;
 
-    public DashboardController(MedicalBillService medicalBillService) {
-        this.medicalBillService = medicalBillService;
-    }
+        public DashboardController(MedicalBillService medicalBillService,
+                        PatientService patientService) {
 
-    @GetMapping("/dashboard")
-    public String dashboard(Model model) {
+                this.medicalBillService = medicalBillService;
+                this.patientService = patientService;
+        }
 
-        model.addAttribute("currentBills", new ArrayList<>());
+        @GetMapping("/dashboard")
+        public String dashboard(Model model) {
 
-        model.addAttribute("claimHistory", new ArrayList<>());
+                // Temporary: fetch patient with ID 1
+                Patient patient = patientService
+                                .getPatientById(1L)
+                                .orElseThrow();
 
-        model.addAttribute("billRepository", new ArrayList<>());
+                model.addAttribute(
+                                "currentBills",
+                                medicalBillService.getDraftBills(patient));
 
-        return "dashboard";
-    }
+                model.addAttribute(
+                                "claimHistory",
+                                new ArrayList<>());
+
+                model.addAttribute(
+                                "billRepository",
+                                new ArrayList<>());
+
+                return "dashboard";
+        }
+
 }

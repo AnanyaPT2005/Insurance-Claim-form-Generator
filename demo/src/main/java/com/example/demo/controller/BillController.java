@@ -7,7 +7,12 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.demo.dto.OCRBillResponse;
+import com.example.demo.entity.BillStatus;
+import com.example.demo.entity.MedicalBill;
+import com.example.demo.entity.Patient;
 import com.example.demo.service.OCRService;
+import com.example.demo.service.PatientService;
+import com.example.demo.service.MedicalBillService;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -20,8 +25,16 @@ public class BillController {
 
     private final OCRService ocrService;
 
-    public BillController(OCRService ocrService) {
+    private final MedicalBillService medicalBillService;
+    private final PatientService patientService;
+
+    public BillController(OCRService ocrService,
+            MedicalBillService medicalBillService,
+            PatientService patientService) {
+
         this.ocrService = ocrService;
+        this.medicalBillService = medicalBillService;
+        this.patientService = patientService;
     }
 
     @PostMapping("/upload")
@@ -45,6 +58,33 @@ public class BillController {
                 StandardCopyOption.REPLACE_EXISTING);
 
         OCRBillResponse response = ocrService.process(file);
+
+        MedicalBill bill = new MedicalBill();
+
+        bill.setHospitalName(response.getHospitalName());
+
+        bill.setBillNumber(response.getBillNumber());
+
+        bill.setBillDate(response.getBillDate());
+
+        bill.setSubtotal(response.getSubtotal());
+
+        bill.setTotalAmount(response.getTotal());
+
+        bill.setOriginalFilePath(path.toString());
+
+        bill.setStatus(BillStatus.DRAFT);
+
+        /*
+         * Temporary until we fetch the logged-in patient's profile.
+         */
+        Patient patient = patientService
+                .getPatientById(1L)
+                .orElseThrow();
+
+        bill.setPatient(patient);
+
+        medicalBillService.saveBill(bill);
 
         /*
          * Next step:
