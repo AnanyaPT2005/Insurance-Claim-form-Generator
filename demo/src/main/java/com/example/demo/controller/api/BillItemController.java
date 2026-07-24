@@ -35,5 +35,7 @@ public class BillItemController {
     @DeleteMapping("/{id}")
     public void deleteItem(@PathVariable Long id) {
         billItemService.deleteItem(id);
+        
     }
+    
 }

@@ -48,10 +48,8 @@ public class MedicalBill {
     @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
 
-@OneToMany(mappedBy = "medicalBill",
-           cascade = CascadeType.ALL,
-           fetch = FetchType.EAGER)
-private List<BillItem> billItems;
+    @OneToMany(mappedBy = "medicalBill", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<BillItem> billItems;
 
     public MedicalBill() {
     }

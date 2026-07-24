@@ -74,7 +74,8 @@
                         <th>Price</th>
                     </tr>
 
-                    <tr th:each="item : ${uploadedBill.items}">
+                    <!-- <tr th:each="item : ${uploadedBill.items}"> -->
+                        <tr th:each="item : ${bill.billItems}">
 
                         <td>
                             <input type="checkbox" checked>

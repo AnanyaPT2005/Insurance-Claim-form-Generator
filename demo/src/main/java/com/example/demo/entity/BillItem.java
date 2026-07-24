@@ -27,4 +27,47 @@ public class BillItem {
         if (quantity == null)
             quantity = 1;
     }
+
+    public BillItem() {
+    }
+
+    public Long getItemId() {
+        return itemId;
+    }
+
+    public MedicalBill getMedicalBill() {
+        return medicalBill;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
+    }
+
+    public void setMedicalBill(MedicalBill medicalBill) {
+        this.medicalBill = medicalBill;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
 }

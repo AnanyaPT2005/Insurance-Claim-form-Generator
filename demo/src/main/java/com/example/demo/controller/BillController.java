@@ -5,6 +5,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.example.demo.dto.OCRBillItem;
+import com.example.demo.entity.BillItem;
+import com.example.demo.service.BillItemService;
 
 import com.example.demo.dto.OCRBillResponse;
 import com.example.demo.entity.BillStatus;
@@ -27,14 +30,17 @@ public class BillController {
 
     private final MedicalBillService medicalBillService;
     private final PatientService patientService;
+    private final BillItemService billItemService;
 
     public BillController(OCRService ocrService,
             MedicalBillService medicalBillService,
-            PatientService patientService) {
+            PatientService patientService,
+            BillItemService billItemService) {
 
         this.ocrService = ocrService;
         this.medicalBillService = medicalBillService;
         this.patientService = patientService;
+        this.billItemService = billItemService;
     }
 
     @PostMapping("/upload")
@@ -84,7 +90,30 @@ public class BillController {
 
         bill.setPatient(patient);
 
-        medicalBillService.saveBill(bill);
+       
+
+        bill = medicalBillService.saveBill(bill);
+        System.out.println("Items found: " + response.getItems().size());
+
+        for (OCRBillItem ocrItem : response.getItems()) {
+
+            BillItem item = new BillItem();
+
+            item.setMedicalBill(bill);
+
+            item.setDescription(
+                    ocrItem.getDescription());
+
+            item.setQuantity(
+                    ocrItem.getQuantity());
+
+            item.setPrice(
+                    ocrItem.getPrice());
+
+            billItemService.saveItem(item);
+        }
+
+        
 
         /*
          * Next step:
