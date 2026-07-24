@@ -4,7 +4,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.demo.dto.OCRBillItem;
 import com.example.demo.entity.BillItem;
 import com.example.demo.service.BillItemService;
@@ -44,8 +43,7 @@ public class BillController {
     }
 
     @PostMapping("/upload")
-    public String uploadBill(@RequestParam("file") MultipartFile file,
-            RedirectAttributes redirectAttributes)
+    public String uploadBill(@RequestParam("file") MultipartFile file)
             throws IOException {
 
         if (file.isEmpty()) {
@@ -120,10 +118,6 @@ public class BillController {
          *
          * Save response as Draft Bill
          */
-
-        redirectAttributes.addFlashAttribute(
-                "uploadedBill",
-                response);
 
         return "redirect:/dashboard";
     }
