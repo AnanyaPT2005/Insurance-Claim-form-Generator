@@ -5,3 +5,4 @@ Thumbs.db
 
 # Uploaded medical bills
 insurance-uploads/
+.env
