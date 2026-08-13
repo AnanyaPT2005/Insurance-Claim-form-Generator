@@ -44,7 +44,7 @@ public class DashboardController {
 
                 model.addAttribute(
                                 "billRepository",
-                                new ArrayList<>());
+                                medicalBillService.getAllBillsForPatient(patient));
 
                 return "dashboard";
         }

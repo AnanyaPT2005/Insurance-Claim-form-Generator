@@ -18,6 +18,10 @@ import com.example.demo.entity.Patient;
 import com.example.demo.service.OCRService;
 import com.example.demo.service.PatientService;
 import com.example.demo.service.MedicalBillService;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import java.util.Map;
 import java.math.BigDecimal;
 
@@ -181,5 +185,40 @@ public class BillController {
                 medicalBillService.deleteBill(billId);
 
                 return "redirect:/dashboard";
+        }
+
+        @GetMapping("/file/{billId}")
+        public ResponseEntity<Resource> viewBill(
+                        @PathVariable Long billId) throws IOException {
+
+                MedicalBill bill = medicalBillService
+                                .getBillById(billId)
+                                .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+                Path filePath = Paths.get(bill.getOriginalFilePath());
+
+                if (!Files.exists(filePath)) {
+                        return ResponseEntity.notFound().build();
+                }
+
+                Resource resource = new UrlResource(
+                                filePath.toUri());
+
+                String contentType = Files.probeContentType(filePath);
+
+                if (contentType == null) {
+                        contentType = "application/octet-stream";
+                }
+
+                return ResponseEntity.ok()
+                                .header(
+                                                HttpHeaders.CONTENT_TYPE,
+                                                contentType)
+                                .header(
+                                                HttpHeaders.CONTENT_DISPOSITION,
+                                                "inline; filename=\"" +
+                                                                filePath.getFileName() +
+                                                                "\"")
+                                .body(resource);
         }
 }

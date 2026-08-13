@@ -230,7 +230,61 @@
 
         <h3>Medical Bill Repository</h3>
 
-        <p>No medical bills uploaded.</p>
+        <div th:if="${#lists.isEmpty(billRepository)}">
+            <p>No medical bills uploaded.</p>
+        </div>
+
+        <table th:if="${!#lists.isEmpty(billRepository)}"
+            border="1"
+            width="100%">
+
+            <tr>
+                <th>Bill Number</th>
+                <th>Hospital / Pharmacy</th>
+                <th>Uploaded Date</th>
+                <th>Claim ID</th>
+                <th>Original Bill</th>
+            </tr>
+
+            <tr th:each="bill : ${billRepository}">
+
+                <td th:text="${bill.billNumber}">
+                    Bill Number
+                </td>
+
+                <td th:text="${bill.hospitalName}">
+                    Hospital
+                </td>
+
+                <td th:text="${bill.uploadedAt}">
+                    Uploaded Date
+                </td>
+
+                <td>
+                    <span th:if="${bill.claim != null}"
+                        th:text="${bill.claim.claimId}">
+                    </span>
+
+                    <span th:if="${bill.claim == null}">
+                        Not assigned
+                    </span>
+                </td>
+
+                <td>
+                    <a th:if="${bill.originalFilePath != null}"
+                    th:href="@{'/bills/file/' + ${bill.billId}}"
+                    target="_blank">
+                        View Bill
+                    </a>
+
+                    <span th:if="${bill.originalFilePath == null}">
+                        File unavailable
+                    </span>
+                </td>
+
+            </tr>
+
+        </table>
 
     </section>
 

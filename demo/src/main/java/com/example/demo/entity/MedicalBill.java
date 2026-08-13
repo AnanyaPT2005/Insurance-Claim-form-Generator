@@ -19,6 +19,10 @@ public class MedicalBill {
     @JoinColumn(name = "patient_id")
     private Patient patient;
 
+    @ManyToOne
+    @JoinColumn(name = "claim_id")
+    private Claim claim;
+
     @Column(name = "hospital_name")
     private String hospitalName;
 
@@ -89,6 +93,10 @@ public class MedicalBill {
         return patient;
     }
 
+    public Claim getClaim() {
+        return claim;
+    }
+
     public String getHospitalName() {
         return hospitalName;
     }
@@ -141,6 +149,10 @@ public class MedicalBill {
 
     public void setPatient(Patient patient) {
         this.patient = patient;
+    }
+
+    public void setClaim(Claim claim) {
+        this.claim = claim;
     }
 
     public void setHospitalName(String hospitalName) {
