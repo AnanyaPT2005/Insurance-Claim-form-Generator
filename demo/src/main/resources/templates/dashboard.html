@@ -2,445 +2,1014 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Insurance Dashboard</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/dashboard.css}">
+
 </head>
+
 
 <body>
 
-<div id="dashboard-container">
 
-    <!-- ================= HEADER ================= -->
+<!-- =========================================================
+     SIDEBAR OVERLAY
+========================================================= -->
 
-    <header id="dashboard-header">
+<div id="sidebar-overlay"></div>
 
-        <h1>Insurance Dashboard</h1>
 
-        <a href="/profile">
-            👤 View / Edit Profile
-        </a>
+<!-- =========================================================
+     SLIDE-OUT NAVIGATION
+========================================================= -->
 
-    </header>
+<aside id="side-navbar">
 
-    <hr>
+    <div id="sidebar-header">
 
-    <!-- ================= CURRENT CLAIM ================= -->
+        <h2>Insurance</h2>
 
-    <section id="current-claim-section">
+        <button id="sidebar-close"
+                type="button">
 
-        <h2>Current Claim</h2>
+            ×
 
-        <!-- Upload -->
+        </button>
 
-        <div id="upload-bill-section">
+    </div>
 
-            <h3>Upload Medical Bill</h3>
 
-            <form id="upload-bill-form"
-                  th:action="@{/bills/upload}"
-                  method="post"
-                  enctype="multipart/form-data">
+    <a href="/profile"
+       class="sidebar-link">
 
-                <input
-                        type="file"
-                        name="file"
-                        accept=".jpg,.jpeg,.png,.pdf"
-                        required>
+        👤 View / Edit Profile
 
-                <button type="submit">
-                    Upload Medical Bill
-                </button>
+    </a>
 
-            </form>
 
-        </div>
+    <a href="/logout"
+       class="sidebar-link danger">
 
-        <br>
+        ↪ Logout
 
-        <!-- Bills -->
+    </a>
 
-        <div id="current-bills-section">
+</aside>
 
-            <h3>Current Claim Bills</h3>
 
-            <div th:if="${#lists.isEmpty(currentBills)}">
-                <p>No bills uploaded yet.</p>
-            </div>
+<!-- =========================================================
+     TOP NAVBAR
+========================================================= -->
 
-            <div th:each="bill : ${currentBills}">
+<nav id="top-navbar">
 
-                <form class="bill-form"
-                      th:action="@{/bills/save/{id}(id=${bill.billId})}"
-                      method="post">
+    <div id="navbar-left">
 
-                    <div class="bill-card"
-                         style="border:1px solid #999;padding:15px;margin-bottom:20px;">
+        <button id="menu-button"
+                type="button"
+                aria-label="Open menu">
 
-                        <!-- Bill Summary -->
+            ☰
 
-                        <table class="bill-summary-table"
-                               border="1"
-                               width="100%">
+        </button>
 
-                            <tr>
 
-                                <th>Hospital / Pharmacy</th>
-                                <th>Bill Number</th>
-                                <th>Date</th>
-                                <th>Selected Amount</th>
-                                <th>Bill Total</th>
+        <span id="navbar-title">
 
-                            </tr>
+            Insurance Dashboard
 
-                            <tr>
+        </span>
 
-                                <td th:text="${bill.hospitalName}"></td>
+    </div>
 
-                                <td th:text="${bill.billNumber}"></td>
 
-                                <td th:text="${bill.billDate}"></td>
+    <div id="navbar-right">
 
-                                <!-- Temporary -->
-                                <td class="selected-amount"
-                                    th:id="'selected-amount-' + ${bill.billId}">
-                                    0.00
-                                </td>
+        <button id="theme-toggle"
+                type="button"
+                aria-label="Toggle dark mode">
 
-                                <td th:text="${bill.totalAmount}"></td>
+            🌙
 
-                            </tr>
+        </button>
 
-                        </table>
+    </div>
 
-                        <br>
+</nav>
 
-                        <!-- Items -->
 
-                        <details class="bill-items-section">
+<!-- =========================================================
+     MAIN DASHBOARD
+========================================================= -->
 
-                            <summary>
-                                <strong>View Items</strong>
-                            </summary>
+<main id="dashboard-container">
 
-                            <br>
 
-                            <table class="bill-items-table"
-                                   border="1"
-                                   width="100%">
+    <!-- =====================================================
+         WELCOME
+    ====================================================== -->
 
-                                <tr>
+    <div id="dashboard-welcome">
 
-                                    <th>Select</th>
-                                    <th>Description</th>
-                                    <th>Quantity</th>
-                                    <th>Price</th>
+        <h1>
+            Welcome back
+        </h1>
 
-                                </tr>
+        <p>
+            Manage your medical bills and insurance claims.
+        </p>
 
-                                <tr th:each="item : ${bill.billItems}">
+    </div>
 
-                                    <td>
 
-                                        <input
-                                                type="checkbox" class="item-selected"
-                                                name="selected"
-                                                th:value="${item.itemId}"
-                                                th:checked="${item.selected}">
+    <!-- =====================================================
+         MAIN TWO COLUMN LAYOUT
+    ====================================================== -->
 
-                                    </td>
+    <div id="dashboard-grid">
 
-                                    <td>
 
-                                        <input
-                                                type="text"
-                                                th:name="'description_' + ${item.itemId}"
-                                                th:value="${item.description}">
+        <!-- =================================================
+             LEFT COLUMN
+             CURRENT CLAIM
+        ================================================== -->
 
-                                    </td>
+        <section id="current-claim-section"
+                 class="dashboard-section">
 
-                                    <td>
 
-                                        <input
-                                                type="number" class="item-quantity"
-                                                min="1"
-                                                th:name="'quantity_' + ${item.itemId}"
-                                                th:value="${item.quantity}">
+            <div class="section-header">
 
-                                    </td>
+                <div>
 
-                                    <td>
+                    <h2>
+                        Current Claim
+                    </h2>
 
-                                        <input
-                                                type="number" class="item-price"
-                                                step="0.01" min="0"
-                                                th:name="'price_' + ${item.itemId}"
-                                                th:value="${item.price}">
+                    <p>
+                        Upload and review bills for this claim.
+                    </p>
 
-                                    </td>
-
-                                </tr>
-
-                            </table>
-
-                        </details>
-
-                        <br>
-
-                        <div class="bill-actions">
-
-                            <button type="submit">
-                                Save Bill
-                            </button>
-
-                            <button type="submit"
-                                    th:formaction="@{/bills/delete/{id}(id=${bill.billId})}">
-                                Delete Bill
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                </form>
+                </div>
 
             </div>
 
-        </div>
-        <div id="save-claim-section">
 
-            <form th:action="@{/claims/save}"
-                method="post">
+            <div class="section-content">
 
-                <button type="submit">
-                    Save Current Claim
-                </button>
 
-            </form>
+                <!-- =========================================
+                     UPLOAD MEDICAL BILL
+                ========================================== -->
 
-        </div>
+                <div id="upload-bill-section">
 
-    </section>
+                    <h3>
+                        Upload Medical Bill
+                    </h3>
 
-    <hr>
 
-    <!-- ================= HISTORY ================= -->
+                    <form id="upload-bill-form"
+                          th:action="@{/bills/upload}"
+                          method="post"
+                          enctype="multipart/form-data">
 
-    <section id="claim-history-section">
 
-        <h3>Claims</h3>
+                        <input
+                                type="file"
+                                name="file"
+                                accept=".jpg,.jpeg,.png,.pdf"
+                                required>
 
-        <div th:if="${#lists.isEmpty(claimHistory)}">
-
-            <p>No claims saved yet.</p>
-
-        </div>
-
-        <table th:if="${!#lists.isEmpty(claimHistory)}"
-            border="1"
-            width="100%">
-
-            <tr>
-                <th>Claim ID</th>
-                <th>Claim Number</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>PDF</th>
-            </tr>
-
-            <tr th:each="claim : ${claimHistory}">
-
-                <td th:text="${claim.claimId}"></td>
-
-                <td th:text="${claim.claimNumber != null
-                            ? claim.claimNumber
-                            : 'Not generated'}">
-                </td>
-
-                <td th:text="${claim.claimStatus}"></td>
-
-                <td th:text="${claim.createdAt}"></td>
-                <td>
-
-                    <form th:action="@{/claims/generate/{id}(id=${claim.claimId})}"
-                        method="post"
-                        target="_blank">
 
                         <button type="submit">
-                            Generate PDF
+
+                            Upload Bill
+
                         </button>
+
 
                     </form>
 
-                </td>
-                <td>
-                    <span th:if="${claim.generatedPdf == null}">
-                        Not generated
-                    </span>
+                </div>
 
-                    <a th:if="${claim.generatedPdf != null}"
-                    th:href="@{/claims/pdf/{id}(id=${claim.claimId})}"
-                    target="_blank">
 
-                        View PDF
+                <!-- =========================================
+                     CURRENT CLAIM BILLS
+                ========================================== -->
 
-                    </a>
+                <div id="current-bills-section">
 
-                </td>
 
-            </tr>
+                    <div th:if="${#lists.isEmpty(currentBills)}"
+                         class="empty-state">
 
-        </table>
+                        <p>
+                            No bills uploaded yet.
+                        </p>
 
-    </section>
+                    </div>
 
-    <hr>
 
-    <!-- ================= BILL REPOSITORY ================= -->
+                    <div th:each="bill : ${currentBills}">
 
-    <section id="bill-repository-section">
 
-        <h3>Medical Bill Repository</h3>
+                        <form class="bill-form"
+                              th:action="@{/bills/save/{id}(id=${bill.billId})}"
+                              method="post">
 
-        <div th:if="${#lists.isEmpty(billRepository)}">
-            <p>No medical bills uploaded.</p>
+
+                            <div class="bill-card">
+
+
+                                <!-- BILL SUMMARY -->
+
+                                <table class="bill-summary-table">
+
+                                    <tr>
+
+                                        <th>
+                                            Hospital
+                                        </th>
+
+                                        <th>
+                                            Bill No.
+                                        </th>
+
+                                        <th>
+                                            Date
+                                        </th>
+
+                                        <th>
+                                            Selected
+                                        </th>
+
+                                        <th>
+                                            Total
+                                        </th>
+
+                                    </tr>
+
+
+                                    <tr>
+
+                                        <td th:text="${bill.hospitalName}">
+                                        </td>
+
+                                        <td th:text="${bill.billNumber}">
+                                        </td>
+
+                                        <td th:text="${bill.billDate}">
+                                        </td>
+
+                                        <td class="selected-amount"
+                                            th:id="'selected-amount-' + ${bill.billId}">
+
+                                            0.00
+
+                                        </td>
+
+                                        <td th:text="${bill.totalAmount}">
+                                        </td>
+
+                                    </tr>
+
+                                </table>
+
+
+                                <!-- BILL ITEMS -->
+
+                                <details class="bill-items-section">
+
+
+                                    <summary>
+
+                                        View / Edit Items
+
+                                    </summary>
+
+
+                                    <br>
+
+
+                                    <table class="bill-items-table">
+
+
+                                        <tr>
+
+                                            <th>
+                                                Select
+                                            </th>
+
+                                            <th>
+                                                Description
+                                            </th>
+
+                                            <th>
+                                                Qty
+                                            </th>
+
+                                            <th>
+                                                Price
+                                            </th>
+
+                                        </tr>
+
+
+                                        <tr th:each="item : ${bill.billItems}">
+
+
+                                            <td>
+
+                                                <input
+                                                        type="checkbox"
+                                                        class="item-selected"
+                                                        name="selected"
+                                                        th:value="${item.itemId}"
+                                                        th:checked="${item.selected}">
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                        type="text"
+                                                        th:name="'description_' + ${item.itemId}"
+                                                        th:value="${item.description}">
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                        type="number"
+                                                        class="item-quantity"
+                                                        min="1"
+                                                        th:name="'quantity_' + ${item.itemId}"
+                                                        th:value="${item.quantity}">
+
+                                            </td>
+
+
+                                            <td>
+
+                                                <input
+                                                        type="number"
+                                                        class="item-price"
+                                                        step="0.01"
+                                                        min="0"
+                                                        th:name="'price_' + ${item.itemId}"
+                                                        th:value="${item.price}">
+
+                                            </td>
+
+
+                                        </tr>
+
+
+                                    </table>
+
+
+                                </details>
+
+
+                                <!-- BILL ACTIONS -->
+
+                                <div class="bill-actions">
+
+
+                                    <button type="submit">
+
+                                        Save Bill
+
+                                    </button>
+
+
+                                    <button
+                                            type="submit"
+                                            th:formaction="@{/bills/delete/{id}(id=${bill.billId})}">
+
+                                        Delete Bill
+
+                                    </button>
+
+
+                                </div>
+
+
+                            </div>
+
+
+                        </form>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =========================================
+                     SAVE CURRENT CLAIM
+                ========================================== -->
+
+                <div id="save-claim-section">
+
+
+                    <form th:action="@{/claims/save}"
+                          method="post">
+
+
+                        <button
+                                type="submit"
+                                class="save-claim-button">
+
+                            Save Current Claim
+
+                        </button>
+
+
+                    </form>
+
+
+                </div>
+
+
+            </div>
+
+
+        </section>
+
+
+        <!-- =================================================
+             RIGHT COLUMN
+        ================================================== -->
+
+        <div id="right-dashboard-column">
+
+
+            <!-- =============================================
+                 MEDICAL BILL REPOSITORY
+            ============================================== -->
+
+            <section id="bill-repository-section"
+                     class="dashboard-section">
+
+
+                <div class="section-header">
+
+                    <div>
+
+                        <h2>
+                            Medical Bill Repository
+                        </h2>
+
+                        <p>
+                            Your uploaded medical bills.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="section-content">
+
+
+                    <div th:if="${#lists.isEmpty(billRepository)}"
+                         class="empty-state">
+
+                        <p>
+                            No medical bills uploaded.
+                        </p>
+
+                    </div>
+
+
+                    <div id="repository-table-wrapper"
+                         th:if="${!#lists.isEmpty(billRepository)}">
+
+
+                        <table class="repository-table">
+
+
+                            <tr>
+
+                                <th>
+                                    Bill
+                                </th>
+
+                                <th>
+                                    Hospital
+                                </th>
+
+                                <th>
+                                    Uploaded
+                                </th>
+
+                                <th>
+                                    Claim
+                                </th>
+
+                                <th>
+                                    File
+                                </th>
+
+                            </tr>
+
+
+                            <tr th:each="bill : ${billRepository}">
+
+
+                                <td th:text="${bill.billNumber}">
+                                </td>
+
+
+                                <td th:text="${bill.hospitalName}">
+                                </td>
+
+
+                                <td th:text="${bill.uploadedAt}">
+                                </td>
+
+
+                                <td>
+
+
+                                    <span
+                                            th:if="${bill.claim != null}"
+                                            th:text="${bill.claim.claimId}">
+
+                                    </span>
+
+
+                                    <span
+                                            th:if="${bill.claim == null}">
+
+                                        Not assigned
+
+                                    </span>
+
+
+                                </td>
+
+
+                                <td>
+
+
+                                    <a
+                                            th:if="${bill.originalFilePath != null}"
+                                            th:href="@{'/bills/file/' + ${bill.billId}}"
+                                            target="_blank">
+
+                                        View Bill
+
+                                    </a>
+
+
+                                    <span
+                                            th:if="${bill.originalFilePath == null}">
+
+                                        Unavailable
+
+                                    </span>
+
+
+                                </td>
+
+
+                            </tr>
+
+
+                        </table>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </section>
+
+
+            <!-- =============================================
+                 CLAIM HISTORY
+                 DIRECTLY UNDER REPOSITORY
+            ============================================== -->
+
+            <section id="claim-history-section"
+                     class="dashboard-section">
+
+
+                <details>
+
+
+                    <summary class="claim-history-header">
+
+
+                        <span>
+
+                            📋 Claim History
+
+                        </span>
+
+
+                        <span class="claim-history-count"
+                              th:text="${#lists.size(claimHistory)}">
+
+                            0
+
+                        </span>
+
+
+                    </summary>
+
+
+                    <div id="claim-history-content"
+                         class="section-content">
+
+
+                        <!-- NO CLAIMS -->
+
+                        <div th:if="${#lists.isEmpty(claimHistory)}"
+                             class="empty-state">
+
+
+                            <p>
+
+                                No claims saved yet.
+
+                            </p>
+
+
+                        </div>
+
+
+                        <!-- CLAIM LIST -->
+
+                        <div th:each="claim : ${claimHistory}">
+
+
+                            <div class="claim-history-card">
+
+
+                                <strong>
+
+                                    Claim #
+
+                                    <span th:text="${claim.claimId}">
+                                    </span>
+
+                                </strong>
+
+
+                                <span>
+
+                                    Number:
+
+                                    <span
+                                            th:text="${claim.claimNumber != null
+                                                ? claim.claimNumber
+                                                : 'Not generated'}">
+
+                                    </span>
+
+                                </span>
+
+
+                                <span>
+
+                                    Status:
+
+                                    <span
+                                            th:text="${claim.claimStatus}">
+
+                                    </span>
+
+                                </span>
+
+
+                                <span>
+
+                                    Created:
+
+                                    <span
+                                            th:text="${claim.createdAt}">
+
+                                    </span>
+
+                                </span>
+
+
+                                <!-- GENERATE PDF -->
+
+                                <form
+                                        th:action="@{/claims/generate/{id}(id=${claim.claimId})}"
+                                        method="post"
+                                        target="_blank">
+
+
+                                    <button
+                                            type="submit"
+                                            class="claim-pdf-button">
+
+                                        Generate PDF
+
+                                    </button>
+
+
+                                </form>
+
+
+                                <!-- VIEW PDF -->
+
+                                <a
+                                        th:if="${claim.generatedPdf != null}"
+                                        th:href="@{/claims/pdf/{id}(id=${claim.claimId})}"
+                                        target="_blank"
+                                        class="view-pdf-link">
+
+                                    View PDF
+
+                                </a>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </details>
+
+
+            </section>
+
+
         </div>
+        <!-- END right-dashboard-column -->
 
-        <table th:if="${!#lists.isEmpty(billRepository)}"
-            border="1"
-            width="100%">
 
-            <tr>
-                <th>Bill Number</th>
-                <th>Hospital / Pharmacy</th>
-                <th>Uploaded Date</th>
-                <th>Claim ID</th>
-                <th>Original Bill</th>
-            </tr>
+    </div>
+    <!-- END dashboard-grid -->
 
-            <tr th:each="bill : ${billRepository}">
 
-                <td th:text="${bill.billNumber}">
-                    Bill Number
-                </td>
+</main>
 
-                <td th:text="${bill.hospitalName}">
-                    Hospital
-                </td>
 
-                <td th:text="${bill.uploadedAt}">
-                    Uploaded Date
-                </td>
-
-                <td>
-                    <span th:if="${bill.claim != null}"
-                        th:text="${bill.claim.claimId}">
-                    </span>
-
-                    <span th:if="${bill.claim == null}">
-                        Not assigned
-                    </span>
-                </td>
-
-                <td>
-                    <a th:if="${bill.originalFilePath != null}"
-                    th:href="@{'/bills/file/' + ${bill.billId}}"
-                    target="_blank">
-                        View Bill
-                    </a>
-
-                    <span th:if="${bill.originalFilePath == null}">
-                        File unavailable
-                    </span>
-                </td>
-
-            </tr>
-
-        </table>
-
-    </section>
-
-    <br>
-
-    <footer id="dashboard-footer">
-
-        <a href="/logout">Logout</a>
-
-    </footer>
-
-</div>
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
 
 <script>
+
+
+/* =========================================================
+   SELECTED AMOUNT CALCULATION
+========================================================= */
 
 function calculateSelectedAmount(billCard) {
 
     let total = 0;
 
+
     const checkboxes =
         billCard.querySelectorAll(".item-selected");
 
+
     checkboxes.forEach(function (checkbox) {
+
 
         if (!checkbox.checked) {
             return;
         }
 
-        const row = checkbox.closest("tr");
+
+        const row =
+            checkbox.closest("tr");
+
 
         const quantity =
             parseFloat(
                 row.querySelector(".item-quantity").value
             ) || 0;
 
+
         const price =
             parseFloat(
                 row.querySelector(".item-price").value
             ) || 0;
 
+
         total += quantity * price;
+
+
     });
+
 
     const amountElement =
         billCard.querySelector(".selected-amount");
 
+
     amountElement.textContent =
-        total.toFixed(2);
+        "₹" + total.toFixed(2);
+
+
 }
 
 
-document.querySelectorAll(".bill-card")
+/* INITIALIZE CALCULATIONS */
+
+document
+    .querySelectorAll(".bill-card")
     .forEach(function (billCard) {
+
 
         const inputs =
             billCard.querySelectorAll(
                 ".item-selected, .item-quantity, .item-price"
             );
 
+
         inputs.forEach(function (input) {
+
 
             input.addEventListener(
                 "change",
                 function () {
 
-                    calculateSelectedAmount(billCard);
+                    calculateSelectedAmount(
+                        billCard
+                    );
 
                 }
             );
+
 
             input.addEventListener(
                 "input",
                 function () {
 
-                    calculateSelectedAmount(billCard);
+                    calculateSelectedAmount(
+                        billCard
+                    );
 
                 }
             );
 
+
         });
 
-        calculateSelectedAmount(billCard);
+
+        calculateSelectedAmount(
+            billCard
+        );
+
 
     });
 
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+const menuButton =
+    document.getElementById(
+        "menu-button"
+    );
+
+
+const sidebar =
+    document.getElementById(
+        "side-navbar"
+    );
+
+
+const sidebarClose =
+    document.getElementById(
+        "sidebar-close"
+    );
+
+
+const overlay =
+    document.getElementById(
+        "sidebar-overlay"
+    );
+
+
+function openSidebar() {
+
+    sidebar.classList.add("open");
+
+    overlay.classList.add("open");
+
+}
+
+
+function closeSidebar() {
+
+    sidebar.classList.remove("open");
+
+    overlay.classList.remove("open");
+
+}
+
+
+menuButton.addEventListener(
+    "click",
+    openSidebar
+);
+
+
+sidebarClose.addEventListener(
+    "click",
+    closeSidebar
+);
+
+
+overlay.addEventListener(
+    "click",
+    closeSidebar
+);
+
+
+/* =========================================================
+   DARK / LIGHT MODE
+========================================================= */
+
+const themeToggle =
+    document.getElementById(
+        "theme-toggle"
+    );
+
+
+const savedTheme =
+    localStorage.getItem(
+        "insurance-theme"
+    );
+
+
+if (savedTheme === "dark") {
+
+    document.body.classList.add(
+        "dark"
+    );
+
+    themeToggle.textContent =
+        "☀️";
+
+}
+
+
+themeToggle.addEventListener(
+    "click",
+    function () {
+
+
+        document.body.classList.toggle(
+            "dark"
+        );
+
+
+        const dark =
+            document.body.classList.contains(
+                "dark"
+            );
+
+
+        localStorage.setItem(
+            "insurance-theme",
+            dark
+                ? "dark"
+                : "light"
+        );
+
+
+        themeToggle.textContent =
+            dark
+                ? "☀️"
+                : "🌙";
+
+
+    }
+);
+
+
 </script>
+
 
 </body>
 

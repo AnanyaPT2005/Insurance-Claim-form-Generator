@@ -1,38 +1,195 @@
 <!DOCTYPE html>
-
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
-<title>Login</title>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Insurance Login</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/login.css}">
 
 </head>
 
+
 <body>
 
-<h2>Login</h2>
+<div id="login-page">
 
-<form th:action="@{/login}" method="post">
 
-Username
+    <!-- Theme toggle -->
 
-<input type="text" name="username">
+    <button id="theme-toggle"
+            type="button"
+            aria-label="Toggle theme">
 
-<br><br>
+        🌙
 
-Password
+    </button>
 
-<input type="password" name="password">
 
-<br><br>
+    <!-- Login card -->
 
-<button type="submit">
+    <main id="login-card">
 
-Login
 
-</button>
+        <div id="login-header">
 
-</form>
+            <div id="login-icon">
+                🛡️
+            </div>
+
+            <h1>
+                Insurance Portal
+            </h1>
+
+            <p>
+                Sign in to manage your medical bills and claims.
+            </p>
+
+        </div>
+
+
+        <form id="login-form"
+              th:action="@{/login}"
+              method="post">
+
+
+            <!-- Username -->
+
+            <div class="form-group">
+
+                <label for="username">
+                    Username
+                </label>
+
+                <input
+                        id="username"
+                        type="text"
+                        name="username"
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                        required>
+
+            </div>
+
+
+            <!-- Password -->
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                        id="password"
+                        type="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required>
+
+            </div>
+
+
+            <!-- Login error -->
+
+            <div th:if="${param.error}"
+                 class="login-message error">
+
+                Invalid username or password.
+
+            </div>
+
+
+            <!-- Logout message -->
+
+            <div th:if="${param.logout}"
+                 class="login-message success">
+
+                You have been logged out successfully.
+
+            </div>
+
+
+            <button
+                    id="login-button"
+                    type="submit">
+
+                Login
+
+            </button>
+
+
+        </form>
+
+
+        <div id="login-footer">
+
+            <span>
+                Secure Insurance Management
+            </span>
+
+        </div>
+
+
+    </main>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   LIGHT / DARK MODE
+========================================================= */
+
+const themeToggle =
+    document.getElementById("theme-toggle");
+
+const savedTheme =
+    localStorage.getItem("insurance-theme");
+
+
+if (savedTheme === "dark") {
+
+    document.body.classList.add("dark");
+
+    themeToggle.textContent = "☀️";
+
+}
+
+
+themeToggle.addEventListener(
+    "click",
+    function () {
+
+        document.body.classList.toggle("dark");
+
+
+        const dark =
+            document.body.classList.contains("dark");
+
+
+        localStorage.setItem(
+            "insurance-theme",
+            dark ? "dark" : "light"
+        );
+
+
+        themeToggle.textContent =
+            dark ? "☀️" : "🌙";
+
+    }
+);
+
+</script>
+
 
 </body>
 

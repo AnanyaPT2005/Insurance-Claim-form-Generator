@@ -2,78 +2,394 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Patient Profile</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/profile.css}">
+
 </head>
+
 
 <body>
 
-<h2>Patient Profile</h2>
+<div id="profile-page">
 
-<form th:action="@{/profile}"
-      th:object="${patient}"
-      method="post">
 
-    <h3>Personal Information</h3>
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
 
-    Full Name
-    <input type="text" th:field="*{fullName}">
-    <br><br>
+    <header id="profile-header">
 
-    Date of Birth
-    <input type="date" th:field="*{dob}">
-    <br><br>
+        <div id="profile-header-left">
 
-    Gender
-    <input type="text" th:field="*{gender}">
-    <br><br>
+            <a href="/dashboard"
+               id="back-dashboard">
 
-    Phone
-    <input type="text" th:field="*{phone}">
-    <br><br>
+                ← Dashboard
 
-    Email
-    <input type="email" th:field="*{email}">
-    <br><br>
+            </a>
 
-    Address
-    <textarea th:field="*{address}"></textarea>
+        </div>
 
-    <br><br>
 
-    PAN Number
-    <input type="text" th:field="*{panNumber}">
+        <button id="theme-toggle"
+                type="button"
+                aria-label="Toggle theme">
 
-    <hr>
+            🌙
 
-    <h3>Insurance Information</h3>
+        </button>
 
-    Insurance Company
-    <input type="text"
-           th:field="*{insuranceCompany}">
+    </header>
 
-    <br><br>
 
-    Policy Number
-    <input type="text"
-           th:field="*{policyNumber}">
+    <!-- =====================================================
+         PROFILE CONTAINER
+    ====================================================== -->
 
-    <br><br>
+    <main id="profile-container">
 
-    Member ID
-    <input type="text"
-           th:field="*{memberId}">
 
-    <br><br>
+        <div id="profile-title">
 
-    <input type="hidden" th:field="*{patientId}">
+            <h1>
+                Patient Profile
+            </h1>
 
-    <button type="submit">
+            <p>
+                Manage your personal and insurance information.
+            </p>
 
-        Save Profile
+        </div>
 
-    </button>
 
-</form>
+        <!-- =================================================
+             PROFILE FORM
+        ================================================== -->
+
+        <form id="profile-form"
+              th:action="@{/profile}"
+              th:object="${patient}"
+              method="post">
+
+
+            <!-- =============================================
+                 PERSONAL INFORMATION
+            ============================================== -->
+
+            <section class="profile-section">
+
+                <div class="section-heading">
+
+                    <h2>
+                        Personal Information
+                    </h2>
+
+                    <p>
+                        Your basic personal details.
+                    </p>
+
+                </div>
+
+
+                <div class="form-grid">
+
+
+                    <!-- Full Name -->
+
+                    <div class="form-group">
+
+                        <label for="fullName">
+                            Full Name
+                        </label>
+
+                        <input
+                                id="fullName"
+                                type="text"
+                                th:field="*{fullName}"
+                                placeholder="Enter your full name">
+
+                    </div>
+
+
+                    <!-- Date of Birth -->
+
+                    <div class="form-group">
+
+                        <label for="dob">
+                            Date of Birth
+                        </label>
+
+                        <input
+                                id="dob"
+                                type="date"
+                                th:field="*{dob}">
+
+                    </div>
+
+
+                    <!-- Gender -->
+
+                    <div class="form-group">
+
+                        <label for="gender">
+                            Gender
+                        </label>
+
+                        <input
+                                id="gender"
+                                type="text"
+                                th:field="*{gender}"
+                                placeholder="Enter gender">
+
+                    </div>
+
+
+                    <!-- Phone -->
+
+                    <div class="form-group">
+
+                        <label for="phone">
+                            Phone
+                        </label>
+
+                        <input
+                                id="phone"
+                                type="text"
+                                th:field="*{phone}"
+                                placeholder="Enter phone number">
+
+                    </div>
+
+
+                    <!-- Email -->
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            Email
+                        </label>
+
+                        <input
+                                id="email"
+                                type="email"
+                                th:field="*{email}"
+                                placeholder="Enter email address">
+
+                    </div>
+
+
+                    <!-- PAN -->
+
+                    <div class="form-group">
+
+                        <label for="panNumber">
+                            PAN Number
+                        </label>
+
+                        <input
+                                id="panNumber"
+                                type="text"
+                                th:field="*{panNumber}"
+                                placeholder="Enter PAN number">
+
+                    </div>
+
+
+                    <!-- Address -->
+
+                    <div class="form-group full-width">
+
+                        <label for="address">
+                            Address
+                        </label>
+
+                        <textarea
+                                id="address"
+                                th:field="*{address}"
+                                placeholder="Enter your address"
+                                rows="4"></textarea>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 INSURANCE INFORMATION
+            ============================================== -->
+
+            <section class="profile-section">
+
+                <div class="section-heading">
+
+                    <h2>
+                        Insurance Information
+                    </h2>
+
+                    <p>
+                        Details related to your insurance policy.
+                    </p>
+
+                </div>
+
+
+                <div class="form-grid">
+
+
+                    <!-- Insurance Company -->
+
+                    <div class="form-group">
+
+                        <label for="insuranceCompany">
+                            Insurance Company
+                        </label>
+
+                        <input
+                                id="insuranceCompany"
+                                type="text"
+                                th:field="*{insuranceCompany}"
+                                placeholder="Enter insurance company">
+
+                    </div>
+
+
+                    <!-- Policy Number -->
+
+                    <div class="form-group">
+
+                        <label for="policyNumber">
+                            Policy Number
+                        </label>
+
+                        <input
+                                id="policyNumber"
+                                type="text"
+                                th:field="*{policyNumber}"
+                                placeholder="Enter policy number">
+
+                    </div>
+
+
+                    <!-- Member ID -->
+
+                    <div class="form-group">
+
+                        <label for="memberId">
+                            Member ID
+                        </label>
+
+                        <input
+                                id="memberId"
+                                type="text"
+                                th:field="*{memberId}"
+                                placeholder="Enter member ID">
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 ACTIONS
+            ============================================== -->
+
+            <div id="profile-actions">
+
+                <input
+                        type="hidden"
+                        th:field="*{patientId}">
+
+
+                <a href="/dashboard"
+                   id="cancel-button">
+
+                    Cancel
+
+                </a>
+
+
+                <button
+                        id="save-profile-button"
+                        type="submit">
+
+                    Save Profile
+
+                </button>
+
+            </div>
+
+
+        </form>
+
+
+    </main>
+
+</div>
+
+
+<!-- =========================================================
+     THEME SCRIPT
+========================================================= -->
+
+<script>
+
+const themeToggle =
+    document.getElementById("theme-toggle");
+
+
+const savedTheme =
+    localStorage.getItem("insurance-theme");
+
+
+if (savedTheme === "dark") {
+
+    document.body.classList.add("dark");
+
+    themeToggle.textContent = "☀️";
+
+}
+
+
+themeToggle.addEventListener(
+    "click",
+    function () {
+
+        document.body.classList.toggle("dark");
+
+
+        const dark =
+            document.body.classList.contains("dark");
+
+
+        localStorage.setItem(
+            "insurance-theme",
+            dark ? "dark" : "light"
+        );
+
+
+        themeToggle.textContent =
+            dark ? "☀️" : "🌙";
+
+    }
+);
+
+</script>
+
 
 </body>
+
 </html>
