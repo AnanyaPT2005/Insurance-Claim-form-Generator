@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.Claim;
+import com.example.demo.entity.Patient;
 import com.example.demo.repository.ClaimRepository;
 import org.springframework.stereotype.Service;
 
@@ -30,5 +31,10 @@ public class ClaimService {
 
     public void deleteClaim(Long id) {
         claimRepository.deleteById(id);
+    }
+
+    public List<Claim> getClaimsForPatient(Patient patient) {
+
+        return claimRepository.findByPatient(patient);
     }
 }

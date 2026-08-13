@@ -205,6 +205,18 @@
             </div>
 
         </div>
+        <div id="save-claim-section">
+
+            <form th:action="@{/claims/save}"
+                method="post">
+
+                <button type="submit">
+                    Save Current Claim
+                </button>
+
+            </form>
+
+        </div>
 
     </section>
 
@@ -214,11 +226,41 @@
 
     <section id="claim-history-section">
 
-        <h2>History</h2>
+        <h3>Claims</h3>
 
-        <h3>Generated Claim Forms</h3>
+        <div th:if="${#lists.isEmpty(claimHistory)}">
 
-        <p>No claim forms generated.</p>
+            <p>No claims saved yet.</p>
+
+        </div>
+
+        <table th:if="${!#lists.isEmpty(claimHistory)}"
+            border="1"
+            width="100%">
+
+            <tr>
+                <th>Claim ID</th>
+                <th>Claim Number</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+
+            <tr th:each="claim : ${claimHistory}">
+
+                <td th:text="${claim.claimId}"></td>
+
+                <td th:text="${claim.claimNumber != null
+                            ? claim.claimNumber
+                            : 'Not generated'}">
+                </td>
+
+                <td th:text="${claim.claimStatus}"></td>
+
+                <td th:text="${claim.createdAt}"></td>
+
+            </tr>
+
+        </table>
 
     </section>
 

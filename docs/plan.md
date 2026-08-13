@@ -363,3 +363,4 @@ This order minimizes rework and lets you test each layer before adding the next 
 ## TO DO Later:
 
 - Make checked status true by default for each bill item.
+- generate the claim number.
