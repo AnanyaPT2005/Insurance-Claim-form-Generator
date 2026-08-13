@@ -358,3 +358,8 @@ Generated LIC Claim Form
 ```
 
 This order minimizes rework and lets you test each layer before adding the next feature.
+
+
+## TO DO Later:
+
+- Make checked status true by default for each bill item.

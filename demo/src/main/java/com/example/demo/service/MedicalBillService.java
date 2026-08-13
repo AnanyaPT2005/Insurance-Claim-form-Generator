@@ -41,4 +41,9 @@ public class MedicalBillService {
     public void deleteBill(Long id) {
         medicalBillRepository.deleteById(id);
     }
+
+    public List<MedicalBill> getAllBillsForPatient(Patient patient) {
+        return medicalBillRepository.findByPatient(patient);
+    }
+
 }

@@ -26,6 +26,8 @@ public class BillItem {
     public void prePersist() {
         if (quantity == null)
             quantity = 1;
+        if (selected == null)
+            selected = true;
     }
 
     public BillItem() {
@@ -51,6 +53,9 @@ public class BillItem {
         return price;
     }
 
+    @Column(nullable = false)
+    private Boolean selected = true;
+
     public void setItemId(Long itemId) {
         this.itemId = itemId;
     }
@@ -69,5 +74,13 @@ public class BillItem {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public Boolean getSelected() {
+        return selected;
+    }
+
+    public void setSelected(Boolean selected) {
+        this.selected = selected;
     }
 }

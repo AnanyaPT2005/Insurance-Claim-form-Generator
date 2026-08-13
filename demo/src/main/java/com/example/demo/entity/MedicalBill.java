@@ -66,6 +66,19 @@ public class MedicalBill {
             status = BillStatus.DRAFT;
     }
 
+    public BigDecimal getSelectedAmount() {
+
+        if (billItems == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return billItems.stream()
+                .filter(item -> Boolean.TRUE.equals(item.getSelected()))
+                .map(item -> item.getPrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     // ---------- Getters ----------
 
     public Long getBillId() {

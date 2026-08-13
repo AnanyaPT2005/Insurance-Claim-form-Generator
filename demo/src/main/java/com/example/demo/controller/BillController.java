@@ -1,7 +1,10 @@
 package com.example.demo.controller;
 
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.dto.OCRBillItem;
@@ -15,6 +18,8 @@ import com.example.demo.entity.Patient;
 import com.example.demo.service.OCRService;
 import com.example.demo.service.PatientService;
 import com.example.demo.service.MedicalBillService;
+import java.util.Map;
+import java.math.BigDecimal;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -23,115 +28,150 @@ import java.nio.file.*;
 @RequestMapping("/bills")
 public class BillController {
 
-    private static final String UPLOAD_DIR = "insurance-uploads";
+        private static final String UPLOAD_DIR = "insurance-uploads";
 
-    private final OCRService ocrService;
+        private final OCRService ocrService;
 
-    private final MedicalBillService medicalBillService;
-    private final PatientService patientService;
-    private final BillItemService billItemService;
+        private final MedicalBillService medicalBillService;
+        private final PatientService patientService;
+        private final BillItemService billItemService;
 
-    public BillController(OCRService ocrService,
-            MedicalBillService medicalBillService,
-            PatientService patientService,
-            BillItemService billItemService) {
+        public BillController(OCRService ocrService,
+                        MedicalBillService medicalBillService,
+                        PatientService patientService,
+                        BillItemService billItemService) {
 
-        this.ocrService = ocrService;
-        this.medicalBillService = medicalBillService;
-        this.patientService = patientService;
-        this.billItemService = billItemService;
-    }
-
-    @PostMapping("/upload")
-    public String uploadBill(@RequestParam("file") MultipartFile file)
-            throws IOException {
-
-        if (file.isEmpty()) {
-            return "redirect:/dashboard";
+                this.ocrService = ocrService;
+                this.medicalBillService = medicalBillService;
+                this.patientService = patientService;
+                this.billItemService = billItemService;
         }
 
-        Files.createDirectories(Paths.get(UPLOAD_DIR));
+        @PostMapping("/upload")
+        public String uploadBill(@RequestParam("file") MultipartFile file)
+                        throws IOException {
 
-        String filename = System.currentTimeMillis() + "_"
-                + file.getOriginalFilename();
+                if (file.isEmpty()) {
+                        return "redirect:/dashboard";
+                }
 
-        Path path = Paths.get(UPLOAD_DIR, filename);
+                Files.createDirectories(Paths.get(UPLOAD_DIR));
 
-        Files.copy(file.getInputStream(),
-                path,
-                StandardCopyOption.REPLACE_EXISTING);
+                String filename = System.currentTimeMillis() + "_"
+                                + file.getOriginalFilename();
 
-        OCRBillResponse response = ocrService.process(file);
+                Path path = Paths.get(UPLOAD_DIR, filename);
 
-        MedicalBill bill = new MedicalBill();
+                Files.copy(file.getInputStream(),
+                                path,
+                                StandardCopyOption.REPLACE_EXISTING);
 
-        bill.setHospitalName(response.getHospitalName());
+                OCRBillResponse response = ocrService.process(file);
 
-        bill.setBillNumber(response.getBillNumber());
+                MedicalBill bill = new MedicalBill();
 
-        bill.setBillDate(response.getBillDate());
+                bill.setHospitalName(response.getHospitalName());
 
-        bill.setSubtotal(response.getSubtotal());
+                bill.setBillNumber(response.getBillNumber());
 
-        bill.setTotalAmount(response.getTotal());
+                bill.setBillDate(response.getBillDate());
 
-        bill.setOriginalFilePath(path.toString());
+                bill.setSubtotal(response.getSubtotal());
 
-        bill.setStatus(BillStatus.DRAFT);
+                bill.setTotalAmount(response.getTotal());
 
-        /*
-         * Temporary until we fetch the logged-in patient's profile.
-         */
-        Patient patient = patientService
-                .getPatientById(1L)
-                .orElseThrow();
+                bill.setOriginalFilePath(path.toString());
 
-        bill.setPatient(patient);
+                bill.setStatus(BillStatus.DRAFT);
 
-       
+                /*
+                 * Temporary until we fetch the logged-in patient's profile.
+                 */
+                Patient patient = patientService
+                                .getPatientById(1L)
+                                .orElseThrow();
 
-        bill = medicalBillService.saveBill(bill);
-        System.out.println("Items found: " + response.getItems().size());
+                bill.setPatient(patient);
 
-        for (OCRBillItem ocrItem : response.getItems()) {
+                bill = medicalBillService.saveBill(bill);
+                System.out.println("Items found: " + response.getItems().size());
 
-            BillItem item = new BillItem();
+                for (OCRBillItem ocrItem : response.getItems()) {
 
-            item.setMedicalBill(bill);
+                        BillItem item = new BillItem();
 
-            item.setDescription(
-                    ocrItem.getDescription());
+                        item.setMedicalBill(bill);
 
-            item.setQuantity(
-                    ocrItem.getQuantity());
+                        item.setDescription(
+                                        ocrItem.getDescription());
 
-            item.setPrice(
-                    ocrItem.getPrice());
+                        item.setQuantity(
+                                        ocrItem.getQuantity());
 
-            billItemService.saveItem(item);
+                        item.setPrice(
+                                        ocrItem.getPrice());
+                        item.setSelected(true);
+
+                        billItemService.saveItem(item);
+                }
+
+                /*
+                 * Next step:
+                 *
+                 * Save response as Draft Bill
+                 */
+
+                return "redirect:/dashboard";
         }
 
-        
+        @PostMapping("/save/{billId}")
+        public String saveBill(
 
-        /*
-         * Next step:
-         *
-         * Save response as Draft Bill
-         */
+                        @PathVariable Long billId,
 
-        return "redirect:/dashboard";
-    }
+                        @RequestParam(required = false) List<Long> selected,
 
-    @PostMapping("/save")
-    public String saveBill() {
+                        @RequestParam Map<String, String> formData
 
-        /*
-         * Next step:
-         *
-         * Save MedicalBill
-         * Save BillItems
-         */
+        ) {
 
-        return "redirect:/dashboard";
-    }
+                MedicalBill bill = medicalBillService
+                                        .getBillById(billId)
+                                        .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+                List<BillItem> items = billItemService.getItemsByBill(bill);
+
+                Set<Long> selectedIds = new HashSet<>();
+
+                if (selected != null) {
+                        selectedIds.addAll(selected);
+                }
+
+                for (BillItem item : items) {
+
+                        Long itemId = item.getItemId();
+
+                        item.setSelected(
+                                        selectedIds.contains(itemId));
+
+                        item.setDescription(
+                                        formData.get("description_" + itemId));
+
+                        item.setQuantity(
+                                        Integer.parseInt(
+                                                        formData.get("quantity_" + itemId)));
+
+                        item.setPrice(
+                                new BigDecimal(
+                                        formData.get("price_" + itemId)));
+                                                billItemService.saveItem(item);
+
+                                        }
+
+                bill.setStatus(BillStatus.SAVED);
+
+                medicalBillService.saveBill(bill);
+
+                return "redirect:/dashboard";
+        }
 }

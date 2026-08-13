@@ -12,4 +12,6 @@ public interface MedicalBillRepository extends JpaRepository<MedicalBill, Long> 
     List<MedicalBill> findByPatientAndStatus(
         Patient patient,
         BillStatus status);
+
+    List<MedicalBill> findByPatient(Patient patient);
 }

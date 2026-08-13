@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.entity.BillItem;
+import com.example.demo.entity.MedicalBill;
 import com.example.demo.repository.BillItemRepository;
 import org.springframework.stereotype.Service;
 
@@ -30,5 +31,9 @@ public class BillItemService {
 
     public void deleteItem(Long id) {
         billItemRepository.deleteById(id);
+    }
+
+    public List<BillItem> getItemsByBill(MedicalBill bill) {
+        return billItemRepository.findByMedicalBill(bill);
     }
 }

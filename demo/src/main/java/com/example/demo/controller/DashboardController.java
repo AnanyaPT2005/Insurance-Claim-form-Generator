@@ -31,9 +31,12 @@ public class DashboardController {
                                 .getPatientById(1L)
                                 .orElseThrow();
 
+                // model.addAttribute(
+                // "currentBills",
+                // medicalBillService.getDraftBills(patient));
                 model.addAttribute(
                                 "currentBills",
-                                medicalBillService.getDraftBills(patient));
+                                medicalBillService.getAllBillsForPatient(patient));
 
                 model.addAttribute(
                                 "claimHistory",
