@@ -243,6 +243,7 @@
                 <th>Claim Number</th>
                 <th>Status</th>
                 <th>Created</th>
+                <th>PDF</th>
             </tr>
 
             <tr th:each="claim : ${claimHistory}">
@@ -257,6 +258,33 @@
                 <td th:text="${claim.claimStatus}"></td>
 
                 <td th:text="${claim.createdAt}"></td>
+                <td>
+
+                    <form th:action="@{/claims/generate/{id}(id=${claim.claimId})}"
+                        method="post"
+                        target="_blank">
+
+                        <button type="submit">
+                            Generate PDF
+                        </button>
+
+                    </form>
+
+                </td>
+                <td>
+                    <span th:if="${claim.generatedPdf == null}">
+                        Not generated
+                    </span>
+
+                    <a th:if="${claim.generatedPdf != null}"
+                    th:href="@{/claims/pdf/{id}(id=${claim.claimId})}"
+                    target="_blank">
+
+                        View PDF
+
+                    </a>
+
+                </td>
 
             </tr>
 

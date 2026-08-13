@@ -364,3 +364,4 @@ This order minimizes rework and lets you test each layer before adding the next 
 
 - Make checked status true by default for each bill item.
 - generate the claim number.
+- make pdf proper
