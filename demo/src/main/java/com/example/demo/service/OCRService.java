@@ -159,10 +159,13 @@ public class OCRService {
                                 itemMap,
                                 "description"));
 
-                item.setPrice(
-                        getBigDecimal(
-                                itemMap,
-                                "price"));
+                BigDecimal price = getBigDecimal(itemMap, "price");
+
+                if (price == null) {
+                    price = getBigDecimal(itemMap, "total");
+                }
+
+                item.setPrice(price);
 
                 Number quantity = getNumber(
                         itemMap,
