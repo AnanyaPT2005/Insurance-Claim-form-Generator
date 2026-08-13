@@ -191,6 +191,11 @@
                                 Save Bill
                             </button>
 
+                            <button type="submit"
+                                    th:formaction="@{/bills/delete/{id}(id=${bill.billId})}">
+                                Delete Bill
+                            </button>
+
                         </div>
 
                     </div>

@@ -1,9 +1,13 @@
 package com.example.demo.service;
 
+import com.example.demo.entity.BillItem;
 import com.example.demo.entity.BillStatus;
 import com.example.demo.entity.MedicalBill;
 import com.example.demo.entity.Patient;
 import com.example.demo.repository.MedicalBillRepository;
+import com.example.demo.entity.BillItem;
+import com.example.demo.repository.BillItemRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,8 +18,14 @@ public class MedicalBillService {
 
     private final MedicalBillRepository medicalBillRepository;
 
-    public MedicalBillService(MedicalBillRepository medicalBillRepository) {
+    private final BillItemRepository billItemRepository;
+
+    public MedicalBillService(
+            MedicalBillRepository medicalBillRepository,
+            BillItemRepository billItemRepository) {
+
         this.medicalBillRepository = medicalBillRepository;
+        this.billItemRepository = billItemRepository;
     }
 
     public List<MedicalBill> getDraftBills(Patient patient) {
@@ -38,8 +48,18 @@ public class MedicalBillService {
         return medicalBillRepository.findById(id);
     }
 
+    @Transactional
     public void deleteBill(Long id) {
-        medicalBillRepository.deleteById(id);
+
+        MedicalBill bill = medicalBillRepository
+                .findById(id)
+                .orElseThrow(() -> new RuntimeException("Bill not found"));
+
+        List<BillItem> items = billItemRepository.findByMedicalBill(bill);
+
+        billItemRepository.deleteAll(items);
+
+        medicalBillRepository.delete(bill);
     }
 
     public List<MedicalBill> getAllBillsForPatient(Patient patient) {

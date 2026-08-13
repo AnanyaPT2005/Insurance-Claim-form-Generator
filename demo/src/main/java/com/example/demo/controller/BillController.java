@@ -136,8 +136,8 @@ public class BillController {
         ) {
 
                 MedicalBill bill = medicalBillService
-                                        .getBillById(billId)
-                                        .orElseThrow(() -> new RuntimeException("Bill not found"));
+                                .getBillById(billId)
+                                .orElseThrow(() -> new RuntimeException("Bill not found"));
 
                 List<BillItem> items = billItemService.getItemsByBill(bill);
 
@@ -162,15 +162,23 @@ public class BillController {
                                                         formData.get("quantity_" + itemId)));
 
                         item.setPrice(
-                                new BigDecimal(
-                                        formData.get("price_" + itemId)));
-                                                billItemService.saveItem(item);
+                                        new BigDecimal(
+                                                        formData.get("price_" + itemId)));
+                        billItemService.saveItem(item);
 
-                                        }
+                }
 
                 bill.setStatus(BillStatus.SAVED);
 
                 medicalBillService.saveBill(bill);
+
+                return "redirect:/dashboard";
+        }
+
+        @PostMapping("/delete/{billId}")
+        public String deleteBill(@PathVariable Long billId) {
+
+                medicalBillService.deleteBill(billId);
 
                 return "redirect:/dashboard";
         }
