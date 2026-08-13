@@ -6,3 +6,5 @@ Thumbs.db
 # Uploaded medical bills
 insurance-uploads/
 .env
+
+docs/archive.zip
