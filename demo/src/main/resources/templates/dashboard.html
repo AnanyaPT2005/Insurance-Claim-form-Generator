@@ -54,12 +54,11 @@
     </a>
 
 
-    <a href="/logout"
-       class="sidebar-link danger">
-
-        ↪ Logout
-
-    </a>
+    <form th:action="@{/logout}" method="post">
+    <button type="submit" class="sidebar-link danger">
+        Logout
+    </button>
+</form>
 
 </aside>
 
