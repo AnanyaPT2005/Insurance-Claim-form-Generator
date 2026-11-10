@@ -3,231 +3,231 @@ package com.example.demo.controller;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.math.BigDecimal;
+import java.io.IOException;
+import java.nio.file.*;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.demo.dto.OCRBillItem;
-import com.example.demo.entity.BillItem;
-import com.example.demo.service.BillItemService;
-import com.example.demo.entity.User;
-import com.example.demo.service.UserService;
 import org.springframework.security.core.Authentication;
-import com.example.demo.dto.OCRBillResponse;
-import com.example.demo.entity.BillStatus;
-import com.example.demo.entity.MedicalBill;
-import com.example.demo.entity.Patient;
-import com.example.demo.service.OCRService;
-import com.example.demo.service.PatientService;
-import com.example.demo.service.MedicalBillService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import java.util.Map;
-import java.math.BigDecimal;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.nio.file.*;
+import com.example.demo.dto.OCRBillItem;
+import com.example.demo.dto.OCRBillResponse;
+import com.example.demo.entity.BillItem;
+import com.example.demo.entity.BillStatus;
+import com.example.demo.entity.MedicalBill;
+import com.example.demo.entity.Patient;
+import com.example.demo.entity.User;
+import com.example.demo.service.BillItemService;
+import com.example.demo.service.MedicalBillService;
+import com.example.demo.service.OCRService;
+import com.example.demo.service.PatientService;
+import com.example.demo.service.UserService;
 
 @Controller
 @RequestMapping("/bills")
 public class BillController {
 
-        private static final String UPLOAD_DIR = "insurance-uploads";
+    private static final String UPLOAD_DIR = "insurance-uploads";
 
-        private final OCRService ocrService;
-        private final UserService userService;
-        private final MedicalBillService medicalBillService;
-        private final PatientService patientService;
-        private final BillItemService billItemService;
+    private final OCRService ocrService;
+    private final UserService userService;
+    private final MedicalBillService medicalBillService;
+    private final PatientService patientService;
+    private final BillItemService billItemService;
 
-        public BillController(OCRService ocrService,
-                        MedicalBillService medicalBillService,
-                        PatientService patientService,
-                        BillItemService billItemService,
-                        UserService userService) {
+    public BillController(
+            OCRService ocrService,
+            MedicalBillService medicalBillService,
+            PatientService patientService,
+            BillItemService billItemService,
+            UserService userService) {
 
-                this.ocrService = ocrService;
-                this.medicalBillService = medicalBillService;
-                this.patientService = patientService;
-                this.billItemService = billItemService;
-                this.userService = userService;
+        this.ocrService = ocrService;
+        this.medicalBillService = medicalBillService;
+        this.patientService = patientService;
+        this.billItemService = billItemService;
+        this.userService = userService;
+    }
+
+    // Resolve the logged-in user's patient profile
+    private Patient getCurrentPatient(Authentication authentication) {
+
+        User user = userService.getUserByUsername(authentication.getName());
+
+        return patientService.getPatientByUser(user)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Patient profile not found"));
+    }
+
+    // Retrieve a bill only if it belongs to the logged-in patient
+    private MedicalBill getOwnedBill(
+            Long billId,
+            Authentication authentication) {
+
+        Patient patient = getCurrentPatient(authentication);
+
+        MedicalBill bill = medicalBillService.getBillById(billId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Bill not found"));
+
+        if (bill.getPatient() == null ||
+                !bill.getPatient().getPatientId().equals(patient.getPatientId())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Bill not found");
         }
 
-        @PostMapping("/upload")
-        public String uploadBill(
-                        @RequestParam("file") MultipartFile file,
-                        Authentication authentication) throws IOException {
+        return bill;
+    }
 
-                if (file.isEmpty()) {
-                        return "redirect:/dashboard";
-                }
+    @PostMapping("/upload")
+    public String uploadBill(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) throws IOException {
 
-                Files.createDirectories(Paths.get(UPLOAD_DIR));
-
-                String filename = System.currentTimeMillis() + "_"
-                                + file.getOriginalFilename();
-
-                Path path = Paths.get(UPLOAD_DIR, filename);
-
-                Files.copy(file.getInputStream(),
-                                path,
-                                StandardCopyOption.REPLACE_EXISTING);
-
-                OCRBillResponse response = ocrService.process(file);
-
-                MedicalBill bill = new MedicalBill();
-
-                bill.setHospitalName(response.getHospitalName());
-
-                bill.setBillNumber(response.getBillNumber());
-
-                bill.setBillDate(response.getBillDate());
-
-                bill.setSubtotal(response.getSubtotal());
-
-                bill.setTotalAmount(response.getTotal());
-
-                bill.setOriginalFilePath(path.toString());
-
-                bill.setStatus(BillStatus.DRAFT);
-
-                User user = userService.getUserByUsername(
-                                authentication.getName());
-
-                Patient patient = patientService
-                                .getPatientByUser(user)
-                                .orElse(null);
-
-                if (patient == null) {
-                        return "redirect:/profile";
-                }
-
-                bill.setPatient(patient);
-
-                bill = medicalBillService.saveBill(bill);
-                System.out.println("Items found: " + response.getItems().size());
-
-                for (OCRBillItem ocrItem : response.getItems()) {
-
-                        BillItem item = new BillItem();
-
-                        item.setMedicalBill(bill);
-
-                        item.setDescription(
-                                        ocrItem.getDescription());
-
-                        item.setQuantity(
-                                        ocrItem.getQuantity());
-
-                        item.setPrice(
-                                        ocrItem.getPrice());
-                        item.setSelected(true);
-
-                        billItemService.saveItem(item);
-                }
-
-                /*
-                 * Next step:
-                 *
-                 * Save response as Draft Bill
-                 */
-
-                return "redirect:/dashboard";
+        if (file.isEmpty()) {
+            return "redirect:/dashboard";
         }
 
-        @PostMapping("/save/{billId}")
-        public String saveBill(
+        Files.createDirectories(Paths.get(UPLOAD_DIR));
 
-                        @PathVariable Long billId,
+        String filename = System.currentTimeMillis() + "_"
+                + file.getOriginalFilename();
 
-                        @RequestParam(required = false) List<Long> selected,
+        Path path = Paths.get(UPLOAD_DIR, filename);
 
-                        @RequestParam Map<String, String> formData
+        Files.copy(
+                file.getInputStream(),
+                path,
+                StandardCopyOption.REPLACE_EXISTING);
 
-        ) {
+        OCRBillResponse response = ocrService.process(file);
 
-                MedicalBill bill = medicalBillService
-                                .getBillById(billId)
-                                .orElseThrow(() -> new RuntimeException("Bill not found"));
+        MedicalBill bill = new MedicalBill();
 
-                List<BillItem> items = billItemService.getItemsByBill(bill);
+        bill.setHospitalName(response.getHospitalName());
+        bill.setBillNumber(response.getBillNumber());
+        bill.setBillDate(response.getBillDate());
+        bill.setSubtotal(response.getSubtotal());
+        bill.setTotalAmount(response.getTotal());
+        bill.setOriginalFilePath(path.toString());
+        bill.setStatus(BillStatus.DRAFT);
 
-                Set<Long> selectedIds = new HashSet<>();
+        Patient patient = getCurrentPatient(authentication);
 
-                if (selected != null) {
-                        selectedIds.addAll(selected);
-                }
+        bill.setPatient(patient);
 
-                for (BillItem item : items) {
+        bill = medicalBillService.saveBill(bill);
 
-                        Long itemId = item.getItemId();
+        System.out.println("Items found: " + response.getItems().size());
 
-                        item.setSelected(
-                                        selectedIds.contains(itemId));
+        for (OCRBillItem ocrItem : response.getItems()) {
 
-                        item.setDescription(
-                                        formData.get("description_" + itemId));
+            BillItem item = new BillItem();
 
-                        item.setQuantity(
-                                        Integer.parseInt(
-                                                        formData.get("quantity_" + itemId)));
+            item.setMedicalBill(bill);
+            item.setDescription(ocrItem.getDescription());
+            item.setQuantity(ocrItem.getQuantity());
+            item.setPrice(ocrItem.getPrice());
+            item.setSelected(true);
 
-                        item.setPrice(
-                                        new BigDecimal(
-                                                        formData.get("price_" + itemId)));
-                        billItemService.saveItem(item);
-
-                }
-
-                bill.setStatus(BillStatus.SAVED);
-
-                medicalBillService.saveBill(bill);
-
-                return "redirect:/dashboard";
+            billItemService.saveItem(item);
         }
 
-        @PostMapping("/delete/{billId}")
-        public String deleteBill(@PathVariable Long billId) {
+        return "redirect:/dashboard";
+    }
 
-                medicalBillService.deleteBill(billId);
+    @PostMapping("/save/{billId}")
+    public String saveBill(
+            @PathVariable Long billId,
+            @RequestParam(required = false) List<Long> selected,
+            @RequestParam Map<String, String> formData,
+            Authentication authentication) {
 
-                return "redirect:/dashboard";
+        // Ownership check
+        MedicalBill bill = getOwnedBill(billId, authentication);
+
+        List<BillItem> items = billItemService.getItemsByBill(bill);
+
+        Set<Long> selectedIds = new HashSet<>();
+
+        if (selected != null) {
+            selectedIds.addAll(selected);
         }
 
-        @GetMapping("/file/{billId}")
-        public ResponseEntity<Resource> viewBill(
-                        @PathVariable Long billId) throws IOException {
+        for (BillItem item : items) {
 
-                MedicalBill bill = medicalBillService
-                                .getBillById(billId)
-                                .orElseThrow(() -> new RuntimeException("Bill not found"));
+            Long itemId = item.getItemId();
 
-                Path filePath = Paths.get(bill.getOriginalFilePath());
+            item.setSelected(selectedIds.contains(itemId));
 
-                if (!Files.exists(filePath)) {
-                        return ResponseEntity.notFound().build();
-                }
+            item.setDescription(formData.get("description_" + itemId));
 
-                Resource resource = new UrlResource(
-                                filePath.toUri());
+            item.setQuantity(
+                    Integer.parseInt(formData.get("quantity_" + itemId)));
 
-                String contentType = Files.probeContentType(filePath);
+            item.setPrice(
+                    new BigDecimal(formData.get("price_" + itemId)));
 
-                if (contentType == null) {
-                        contentType = "application/octet-stream";
-                }
-
-                return ResponseEntity.ok()
-                                .header(
-                                                HttpHeaders.CONTENT_TYPE,
-                                                contentType)
-                                .header(
-                                                HttpHeaders.CONTENT_DISPOSITION,
-                                                "inline; filename=\"" +
-                                                                filePath.getFileName() +
-                                                                "\"")
-                                .body(resource);
+            billItemService.saveItem(item);
         }
+
+        bill.setStatus(BillStatus.SAVED);
+
+        medicalBillService.saveBill(bill);
+
+        return "redirect:/dashboard";
+    }
+
+    @PostMapping("/delete/{billId}")
+    public String deleteBill(
+            @PathVariable Long billId,
+            Authentication authentication) {
+
+        // Ownership check
+        getOwnedBill(billId, authentication);
+
+        medicalBillService.deleteBill(billId);
+
+        return "redirect:/dashboard";
+    }
+
+    @GetMapping("/file/{billId}")
+    public ResponseEntity<Resource> viewBill(
+            @PathVariable Long billId,
+            Authentication authentication) throws IOException {
+
+        // Ownership check
+        MedicalBill bill = getOwnedBill(billId, authentication);
+
+        Path filePath = Paths.get(bill.getOriginalFilePath());
+
+        if (!Files.exists(filePath)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Resource resource = new UrlResource(filePath.toUri());
+
+        String contentType = Files.probeContentType(filePath);
+
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, contentType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" + filePath.getFileName() + "\"")
+                .body(resource);
+    }
 }
