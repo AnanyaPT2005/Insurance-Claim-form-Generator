@@ -1,0 +1,9 @@
+.git
+.vscode/secrets.properties
+.env
+.env.*
+demo/target/
+insurance-uploads/
+insurance-claims/
+*.log
+docs/
