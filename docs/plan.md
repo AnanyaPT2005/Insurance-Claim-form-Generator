@@ -365,3 +365,40 @@ This order minimizes rework and lets you test each layer before adding the next 
 - Make checked status true by default for each bill item.
 - generate the claim number.
 - make pdf proper
+---
+
+Issue
+
+What needs to change
+
+Hardcoded patient ID
+
+Replace getPatientById(1L) with the currently authenticated user's patient profile.
+
+Authorization
+
+Ensure users can access only their own bills, claims and PDFs.
+
+CSRF
+
+Your SecurityConfig currently disables CSRF. Restore protection for browser forms.
+
+File storage
+
+Replace local filesystem storage with persistent cloud/object storage.
+
+File validation
+
+Validate file type, size and uploaded filenames.
+
+PDF storage
+
+Store generated PDFs persistently.
+
+Financial calculations
+
+Recalculate selected amounts on the backend.
+
+Transactions
+
+Make claim creation and associated bill updates transactional.

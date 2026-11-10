@@ -10,7 +10,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.dto.OCRBillItem;
 import com.example.demo.entity.BillItem;
 import com.example.demo.service.BillItemService;
-
+import com.example.demo.entity.User;
+import com.example.demo.service.UserService;
+import org.springframework.security.core.Authentication;
 import com.example.demo.dto.OCRBillResponse;
 import com.example.demo.entity.BillStatus;
 import com.example.demo.entity.MedicalBill;
@@ -35,7 +37,7 @@ public class BillController {
         private static final String UPLOAD_DIR = "insurance-uploads";
 
         private final OCRService ocrService;
-
+        private final UserService userService;
         private final MedicalBillService medicalBillService;
         private final PatientService patientService;
         private final BillItemService billItemService;
@@ -43,17 +45,20 @@ public class BillController {
         public BillController(OCRService ocrService,
                         MedicalBillService medicalBillService,
                         PatientService patientService,
-                        BillItemService billItemService) {
+                        BillItemService billItemService,
+                        UserService userService) {
 
                 this.ocrService = ocrService;
                 this.medicalBillService = medicalBillService;
                 this.patientService = patientService;
                 this.billItemService = billItemService;
+                this.userService = userService;
         }
 
         @PostMapping("/upload")
-        public String uploadBill(@RequestParam("file") MultipartFile file)
-                        throws IOException {
+        public String uploadBill(
+                        @RequestParam("file") MultipartFile file,
+                        Authentication authentication) throws IOException {
 
                 if (file.isEmpty()) {
                         return "redirect:/dashboard";
@@ -88,12 +93,16 @@ public class BillController {
 
                 bill.setStatus(BillStatus.DRAFT);
 
-                /*
-                 * Temporary until we fetch the logged-in patient's profile.
-                 */
+                User user = userService.getUserByUsername(
+                                authentication.getName());
+
                 Patient patient = patientService
-                                .getPatientById(1L)
-                                .orElseThrow();
+                                .getPatientByUser(user)
+                                .orElse(null);
+
+                if (patient == null) {
+                        return "redirect:/profile";
+                }
 
                 bill.setPatient(patient);
 
