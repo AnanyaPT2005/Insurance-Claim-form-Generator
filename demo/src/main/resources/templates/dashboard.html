@@ -168,36 +168,44 @@
                      UPLOAD MEDICAL BILL
                 ========================================== -->
 
-                <div id="upload-bill-section">
+<div id="upload-bill-section">
 
-                    <h3>
-                        Upload Medical Bill
-                    </h3>
+    <h3>Upload Medical Bill</h3>
 
+    <!-- Upload error -->
+    <div th:if="${uploadError}"
+         class="upload-error"
+         role="alert"
+         th:text="${uploadError}">
+    </div>
 
-                    <form id="upload-bill-form"
-                          th:action="@{/bills/upload}"
-                          method="post"
-                          enctype="multipart/form-data">
+    <!-- Upload success -->
+    <div th:if="${uploadSuccess}"
+         class="upload-success"
+         role="status"
+         th:text="${uploadSuccess}">
+    </div>
 
+    <p>Accepted formats: PDF, JPG, JPEG and PNG. Maximum size: 20 MB.</p>
 
-                        <input
-                                type="file"
-                                name="file"
-                                accept=".jpg,.jpeg,.png,.pdf"
-                                required>
+    <form id="upload-bill-form"
+          th:action="@{/bills/upload}"
+          method="post"
+          enctype="multipart/form-data">
 
+        <input
+                type="file"
+                name="file"
+                accept=".jpg,.jpeg,.png,.pdf"
+                required>
 
-                        <button type="submit">
+        <button type="submit">
+            Upload Bill
+        </button>
 
-                            Upload Bill
+    </form>
 
-                        </button>
-
-
-                    </form>
-
-                </div>
+</div>
 
 
                 <!-- =========================================

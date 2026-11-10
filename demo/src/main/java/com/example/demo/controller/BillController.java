@@ -1,11 +1,14 @@
+
 package com.example.demo.controller;
 
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Locale;
 import java.math.BigDecimal;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.example.demo.dto.OCRBillItem;
@@ -36,6 +40,8 @@ import com.example.demo.service.SupabaseStorageService;
 @Controller
 @RequestMapping("/bills")
 public class BillController {
+
+    private static final long MAX_FILE_SIZE = 20L * 1024 * 1024;
 
     private final OCRService ocrService;
     private final UserService userService;
@@ -91,68 +97,181 @@ public class BillController {
         return bill;
     }
 
-    // Upload bill to Supabase Storage and save its object path in the database
+    // Validate extension, size and actual file signature
+    private void validateBillFile(MultipartFile file) throws IOException {
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Please select a file to upload.");
+        }
+
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException(
+                    "File size exceeds the maximum allowed limit of 20 MB.");
+        }
+
+        String filename = file.getOriginalFilename();
+
+        if (filename == null || filename.isBlank()) {
+            throw new IllegalArgumentException("Invalid filename.");
+        }
+
+        int dotIndex = filename.lastIndexOf('.');
+
+        if (dotIndex < 0) {
+            throw new IllegalArgumentException(
+                    "Unsupported file format. Upload PDF, JPG, JPEG or PNG.");
+        }
+
+        String extension = filename.substring(dotIndex + 1)
+                .toLowerCase(Locale.ROOT);
+
+        byte[] header;
+
+        try (InputStream input = file.getInputStream()) {
+            header = input.readNBytes(8);
+        }
+
+        boolean validContent = switch (extension) {
+
+            case "pdf" ->
+                    startsWith(header, new byte[]{
+                            0x25, 0x50, 0x44, 0x46, 0x2D
+                    });
+
+            case "jpg", "jpeg" ->
+                    startsWith(header, new byte[]{
+                            (byte) 0xFF, (byte) 0xD8, (byte) 0xFF
+                    });
+
+            case "png" ->
+                    startsWith(header, new byte[]{
+                            (byte) 0x89, 0x50, 0x4E, 0x47,
+                            0x0D, 0x0A, 0x1A, 0x0A
+                    });
+
+            default -> false;
+        };
+
+        if (!validContent) {
+            throw new IllegalArgumentException(
+                    "The file content does not match its extension. "
+                    + "Upload a valid PDF, JPG, JPEG or PNG file.");
+        }
+    }
+
+    private boolean startsWith(byte[] actual, byte[] expected) {
+
+        if (actual.length < expected.length) {
+            return false;
+        }
+
+        for (int i = 0; i < expected.length; i++) {
+            if (actual[i] != expected[i]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     @PostMapping("/upload")
     public String uploadBill(
             @RequestParam("file") MultipartFile file,
-            Authentication authentication) throws IOException {
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
 
-        if (file.isEmpty()) {
+        // Validate before OCR or storage upload
+        try {
+            validateBillFile(file);
+        } catch (IllegalArgumentException exception) {
+
+            redirectAttributes.addFlashAttribute(
+                    "uploadError", exception.getMessage());
+
+            return "redirect:/dashboard";
+
+        } catch (IOException exception) {
+
+            redirectAttributes.addFlashAttribute(
+                    "uploadError", "Unable to read the uploaded file.");
+
             return "redirect:/dashboard";
         }
 
-        Patient patient = getCurrentPatient(authentication);
-
-        // Process OCR using the uploaded file
-        OCRBillResponse response = ocrService.process(file);
-
-        // Upload the original bill to Supabase Storage
-        String objectPath = storageService.upload(
-                file,
-                patient.getPatientId());
-
-        MedicalBill bill = new MedicalBill();
-
-        bill.setHospitalName(response.getHospitalName());
-        bill.setBillNumber(response.getBillNumber());
-        bill.setBillDate(response.getBillDate());
-        bill.setSubtotal(response.getSubtotal());
-        bill.setTotalAmount(response.getTotal());
-
-        // Store the Supabase object path instead of a local file path
-        bill.setOriginalFilePath(objectPath);
-
-        bill.setStatus(BillStatus.DRAFT);
-        bill.setPatient(patient);
+        String objectPath = null;
+        boolean billSaved = false;
 
         try {
-            bill = medicalBillService.saveBill(bill);
-        } catch (RuntimeException exception) {
 
-            // Clean up uploaded file if saving the bill fails
-            try {
-                storageService.delete(objectPath);
-            } catch (RuntimeException cleanupException) {
-                exception.addSuppressed(cleanupException);
+            Patient patient = getCurrentPatient(authentication);
+
+            // Existing OCR processing
+            OCRBillResponse response = ocrService.process(file);
+
+            // Upload original file to Supabase
+            objectPath = storageService.upload(
+                    file,
+                    patient.getPatientId());
+
+            MedicalBill bill = new MedicalBill();
+
+            bill.setHospitalName(response.getHospitalName());
+            bill.setBillNumber(response.getBillNumber());
+            bill.setBillDate(response.getBillDate());
+            bill.setSubtotal(response.getSubtotal());
+            bill.setTotalAmount(response.getTotal());
+
+            // Store Supabase object path
+            bill.setOriginalFilePath(objectPath);
+
+            bill.setStatus(BillStatus.DRAFT);
+            bill.setPatient(patient);
+
+            bill = medicalBillService.saveBill(bill);
+            billSaved = true;
+
+            System.out.println(
+                    "Items found: " + response.getItems().size());
+
+            // Existing OCR item creation
+            for (OCRBillItem ocrItem : response.getItems()) {
+
+                BillItem item = new BillItem();
+
+                item.setMedicalBill(bill);
+                item.setDescription(ocrItem.getDescription());
+                item.setQuantity(ocrItem.getQuantity());
+                item.setPrice(ocrItem.getPrice());
+                item.setSelected(true);
+
+                billItemService.saveItem(item);
             }
 
-            throw exception;
-        }
+            redirectAttributes.addFlashAttribute(
+                    "uploadSuccess", "Medical bill uploaded successfully.");
 
-        System.out.println("Items found: " + response.getItems().size());
+        } catch (Exception exception) {
 
-        // Save OCR-extracted bill items
-        for (OCRBillItem ocrItem : response.getItems()) {
+            // Remove uploaded object if the database bill was not saved
+            if (objectPath != null && !billSaved) {
+                try {
+                    storageService.delete(objectPath);
+                } catch (RuntimeException cleanupException) {
+                    exception.addSuppressed(cleanupException);
+                }
+            }
 
-            BillItem item = new BillItem();
-
-            item.setMedicalBill(bill);
-            item.setDescription(ocrItem.getDescription());
-            item.setQuantity(ocrItem.getQuantity());
-            item.setPrice(ocrItem.getPrice());
-            item.setSelected(true);
-
-            billItemService.saveItem(item);
+            if (billSaved) {
+                redirectAttributes.addFlashAttribute(
+                        "uploadError",
+                        "The bill was uploaded, but some extracted items "
+                        + "could not be saved. Please review the bill.");
+            } else {
+                redirectAttributes.addFlashAttribute(
+                        "uploadError",
+                        "Unable to upload or process the medical bill. "
+                        + "Please try again.");
+            }
         }
 
         return "redirect:/dashboard";
@@ -165,7 +284,6 @@ public class BillController {
             @RequestParam Map<String, String> formData,
             Authentication authentication) {
 
-        // Ownership check
         MedicalBill bill = getOwnedBill(billId, authentication);
 
         List<BillItem> items = billItemService.getItemsByBill(bill);
@@ -205,17 +323,14 @@ public class BillController {
             @PathVariable Long billId,
             Authentication authentication) {
 
-        // Ownership check
         MedicalBill bill = getOwnedBill(billId, authentication);
 
-        // Delete the file from Supabase Storage first
         String objectPath = bill.getOriginalFilePath();
 
         if (objectPath != null && !objectPath.isBlank()) {
             storageService.delete(objectPath);
         }
 
-        // Delete the database record and its associated bill items
         medicalBillService.deleteBill(billId);
 
         return "redirect:/dashboard";
@@ -226,10 +341,8 @@ public class BillController {
             @PathVariable Long billId,
             Authentication authentication) {
 
-        // Ownership check
         MedicalBill bill = getOwnedBill(billId, authentication);
 
-        // Retrieve the file from private Supabase Storage
         SupabaseStorageService.StoredFile storedFile =
                 storageService.download(bill.getOriginalFilePath());
 
