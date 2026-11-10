@@ -6,16 +6,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.math.BigDecimal;
 import java.io.IOException;
-import java.nio.file.*;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -31,31 +31,33 @@ import com.example.demo.service.MedicalBillService;
 import com.example.demo.service.OCRService;
 import com.example.demo.service.PatientService;
 import com.example.demo.service.UserService;
+import com.example.demo.service.SupabaseStorageService;
 
 @Controller
 @RequestMapping("/bills")
 public class BillController {
-
-    private static final String UPLOAD_DIR = "insurance-uploads";
 
     private final OCRService ocrService;
     private final UserService userService;
     private final MedicalBillService medicalBillService;
     private final PatientService patientService;
     private final BillItemService billItemService;
+    private final SupabaseStorageService storageService;
 
     public BillController(
             OCRService ocrService,
             MedicalBillService medicalBillService,
             PatientService patientService,
             BillItemService billItemService,
-            UserService userService) {
+            UserService userService,
+            SupabaseStorageService storageService) {
 
         this.ocrService = ocrService;
         this.medicalBillService = medicalBillService;
         this.patientService = patientService;
         this.billItemService = billItemService;
         this.userService = userService;
+        this.storageService = storageService;
     }
 
     // Resolve the logged-in user's patient profile
@@ -89,6 +91,7 @@ public class BillController {
         return bill;
     }
 
+    // Upload bill to Supabase Storage and save its object path in the database
     @PostMapping("/upload")
     public String uploadBill(
             @RequestParam("file") MultipartFile file,
@@ -98,19 +101,15 @@ public class BillController {
             return "redirect:/dashboard";
         }
 
-        Files.createDirectories(Paths.get(UPLOAD_DIR));
+        Patient patient = getCurrentPatient(authentication);
 
-        String filename = System.currentTimeMillis() + "_"
-                + file.getOriginalFilename();
-
-        Path path = Paths.get(UPLOAD_DIR, filename);
-
-        Files.copy(
-                file.getInputStream(),
-                path,
-                StandardCopyOption.REPLACE_EXISTING);
-
+        // Process OCR using the uploaded file
         OCRBillResponse response = ocrService.process(file);
+
+        // Upload the original bill to Supabase Storage
+        String objectPath = storageService.upload(
+                file,
+                patient.getPatientId());
 
         MedicalBill bill = new MedicalBill();
 
@@ -119,17 +118,30 @@ public class BillController {
         bill.setBillDate(response.getBillDate());
         bill.setSubtotal(response.getSubtotal());
         bill.setTotalAmount(response.getTotal());
-        bill.setOriginalFilePath(path.toString());
+
+        // Store the Supabase object path instead of a local file path
+        bill.setOriginalFilePath(objectPath);
+
         bill.setStatus(BillStatus.DRAFT);
-
-        Patient patient = getCurrentPatient(authentication);
-
         bill.setPatient(patient);
 
-        bill = medicalBillService.saveBill(bill);
+        try {
+            bill = medicalBillService.saveBill(bill);
+        } catch (RuntimeException exception) {
+
+            // Clean up uploaded file if saving the bill fails
+            try {
+                storageService.delete(objectPath);
+            } catch (RuntimeException cleanupException) {
+                exception.addSuppressed(cleanupException);
+            }
+
+            throw exception;
+        }
 
         System.out.println("Items found: " + response.getItems().size());
 
+        // Save OCR-extracted bill items
         for (OCRBillItem ocrItem : response.getItems()) {
 
             BillItem item = new BillItem();
@@ -194,8 +206,16 @@ public class BillController {
             Authentication authentication) {
 
         // Ownership check
-        getOwnedBill(billId, authentication);
+        MedicalBill bill = getOwnedBill(billId, authentication);
 
+        // Delete the file from Supabase Storage first
+        String objectPath = bill.getOriginalFilePath();
+
+        if (objectPath != null && !objectPath.isBlank()) {
+            storageService.delete(objectPath);
+        }
+
+        // Delete the database record and its associated bill items
         medicalBillService.deleteBill(billId);
 
         return "redirect:/dashboard";
@@ -204,30 +224,30 @@ public class BillController {
     @GetMapping("/file/{billId}")
     public ResponseEntity<Resource> viewBill(
             @PathVariable Long billId,
-            Authentication authentication) throws IOException {
+            Authentication authentication) {
 
         // Ownership check
         MedicalBill bill = getOwnedBill(billId, authentication);
 
-        Path filePath = Paths.get(bill.getOriginalFilePath());
+        // Retrieve the file from private Supabase Storage
+        SupabaseStorageService.StoredFile storedFile =
+                storageService.download(bill.getOriginalFilePath());
 
-        if (!Files.exists(filePath)) {
-            return ResponseEntity.notFound().build();
-        }
+        byte[] fileContent = storedFile.content();
 
-        Resource resource = new UrlResource(filePath.toUri());
-
-        String contentType = Files.probeContentType(filePath);
+        MediaType contentType = storedFile.contentType();
 
         if (contentType == null) {
-            contentType = "application/octet-stream";
+            contentType = MediaType.APPLICATION_OCTET_STREAM;
         }
 
+        Resource resource = new ByteArrayResource(fileContent);
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, contentType)
+                .contentType(contentType)
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" + filePath.getFileName() + "\"")
+                        "inline; filename=\"medical-bill\"")
                 .body(resource);
     }
 }
